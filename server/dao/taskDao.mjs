@@ -1,4 +1,4 @@
-import { db } from './db.mjs';
+import db from '../data/db.mjs';
 
 // Create a new task
 export const createTask = (teacherId, question, studentIds) => {
@@ -49,7 +49,7 @@ export const getTasksByTeacher = (teacherId) => {
     const sql = `
       SELECT a.*, 
              COUNT(tk.student_id) as student_count,
-             GROUP_CONCAT(u.name, ', ') as student_names
+             GROUP_CONCAT(u.name || ' ' || u.surname, ', ') as student_names
       FROM tasks a
       JOIN task_students tk ON a.id = tk.task_id
       JOIN users u ON tk.student_id = u.id
@@ -101,7 +101,7 @@ export const getTaskById = (taskId, teacherId = null) => {
         resolve(null);
       else {
         const sqlStudents = `
-          SELECT u.id, u.name, u.username, u.avatar
+          SELECT u.id, u.name, u.surname, u.avatar
           FROM users u
           JOIN task_students tk ON u.id = tk.student_id
           WHERE tk.task_id = ?
@@ -170,12 +170,12 @@ export const updateTaskAnswer = (taskId, answer) => {
 };
 
 // Get open tasks for a student
-export const getOpentasksByStudent = (studentId) => {
+export const getOpenTasksByStudent = (studentId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT a.*, u_teacher.name as teacher_name,
              COUNT(tk2.student_id) as student_count,
-             GROUP_CONCAT(u_students.name, ', ') as student_names
+             GROUP_CONCAT(u_students.name || ' ' || u_students.surname, ', ') as student_names
       FROM tasks a
       JOIN task_students tk ON a.id = tk.task_id
       JOIN users u_teacher ON a.teacher_id = u_teacher.id
@@ -244,58 +244,41 @@ export const getClosedTasksByStudent = (studentId) => {
   });
 };
 
+//FIXME
 // Get class overview for teacher
-export const getClassOverview = (teacherId, sortBy = 'alphabetical') => {
+export const getClassOverview = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT u.id, u.name, u.username, u.avatar,
+      SELECT u.id, u.name, u.surname, u.username, u.avatar,
              COUNT(CASE WHEN a.status = 'open' THEN 1 END) as open_tasks,
              COUNT(CASE WHEN a.status = 'closed' THEN 1 END) as closed_tasks,
              COUNT(a.id) as total_tasks,
-             COALESCE(
-               SUM(CASE WHEN a.status = 'closed' THEN a.score * (1.0 / group_sizes.group_size) END) / 
-               NULLIF(COUNT(CASE WHEN a.status = 'closed' THEN 1 END), 0), 
-               0
+             ROUND(
+               AVG(CASE WHEN a.status = 'closed' THEN a.score END), 2
              ) as average_score
       FROM users u
       LEFT JOIN task_students tk ON u.id = tk.student_id
       LEFT JOIN tasks a ON tk.task_id = a.id AND a.teacher_id = ?
-      LEFT JOIN (
-        SELECT task_id, COUNT(*) as group_size
-        FROM task_students
-        GROUP BY task_id
-      ) group_sizes ON a.id = group_sizes.task_id
       WHERE u.role = 'student'
-      GROUP BY u.id, u.name, u.username, u.avatar
+      GROUP BY u.id, u.name, u.surname, u.username, u.avatar
+      ORDER BY u.name, u.surname
     `;
 
     db.all(sql, [teacherId], (err, rows) => {
       if (err)
         reject(err);
       else {
-        let students = rows.map(row => ({
+        const students = rows.map(row => ({
           id: row.id,
           name: row.name,
+          surname: row.surname,
           username: row.username,
           avatar: row.avatar,
-          opentasks: row.open_tasks,
-          closedtasks: row.closed_tasks,
-          totaltasks: row.total_tasks,
+          openTasks: row.open_tasks,
+          closedTasks: row.closed_tasks,
+          totalTasks: row.total_tasks,
           averageScore: row.average_score || 0
         }));
-
-        switch (sortBy) {
-          case 'total_tasks':
-            students.sort((a, b) => b.totaltasks - a.totaltasks);
-            break;
-          case 'average_score':
-            students.sort((a, b) => b.averageScore - a.averageScore);
-            break;
-          case 'alphabetical':
-          default:
-            students.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-        }
 
         resolve(students);
       }

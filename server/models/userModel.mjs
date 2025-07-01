@@ -1,9 +1,12 @@
-function User(id, username, password, salt, full_name, role) {
+function User(id, username, password, salt, name, surname, role, avatar) {
     this.id = id;
     this.username = username;
     this.password = password;
     this.salt = salt;
-    this.full_name = full_name;
+    this.name = name;
+    this.surname = surname;
     this.role = role;
+    this.avatar = avatar;
 }
 
+export default User;

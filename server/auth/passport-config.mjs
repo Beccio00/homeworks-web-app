@@ -1,5 +1,5 @@
 import { Strategy as LocalStrategy } from "passport-local";
-import getUser from "../dao/userDao.mjs";
+import { getUser } from "../dao/userDao.mjs";
 
 export default function initialize(passport) {
   passport.use(

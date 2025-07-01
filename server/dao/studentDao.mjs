@@ -1,19 +1,17 @@
-import { db } from './db.mjs';
+import db from '../data/db.mjs';
 
 // Get all students
 export const getAllStudents = () => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, name, username, avatar FROM users WHERE role = "student" ORDER BY name';
+    const sql = 'SELECT username, name, surname, avatar FROM users WHERE role = "student" ORDER BY surnrame, name';
     db.all(sql, [], (err, rows) => {
       if (err)
         reject(err);
       else {
         const students = rows.map(row => ({
-          id: row.id,
-          name: row.name,
-          undefined,
-          undefined,
           username: row.username,
+          name: row.name,
+          surname: row.surname,
           avatar: row.avatar
         }));
         resolve(students);
@@ -25,7 +23,7 @@ export const getAllStudents = () => {
 // Get student by ID
 export const getStudentById = (studentId) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, name, username, avatar FROM users WHERE id = ? AND role = "student"';
+    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE id = ? AND role = "student"';
     db.get(sql, [studentId], (err, row) => {
       if (err)
         reject(err);
@@ -34,10 +32,9 @@ export const getStudentById = (studentId) => {
       else {
         resolve({
           id: row.id,
-          name: row.name,
-          undefined,
-          undefined,
           username: row.username,
+          name: row.name,
+          surname: row.surname,
           avatar: row.avatar
         });
       }
@@ -53,10 +50,6 @@ export const checkGroupCollaborations = (studentIds, teacherId) => {
       for (let j = i + 1; j < studentIds.length; j++) {
         pairs.push([studentIds[i], studentIds[j]]);
       }
-    }
-
-    if (pairs.length === 0) {
-      return resolve(true);
     }
 
     let checkedPairs = 0;

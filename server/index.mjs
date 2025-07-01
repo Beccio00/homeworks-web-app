@@ -8,14 +8,14 @@ import { body, validationResult } from "express-validator";
 import passport from "passport";
 
 import {
-  createtask,
-  gettasksByTeacher,
-  gettaskById,
-  updatetaskscore,
-  closetask,
-  getOpentasksByStudent,
-  getClosedtasksByStudent,
-  updatetaskAnswer,
+  createTask,
+  getTasksByTeacher,
+  getTaskById,
+  updateTaskScore,
+  closeTask,
+  getOpenTasksByStudent,
+  getClosedTasksByStudent,
+  updateTaskAnswer,
   getClassOverview
 } from "./dao/taskDao.mjs";
 
@@ -35,6 +35,7 @@ app.use(morgan("dev"));
 app.use(
   cors({
     origin: "http://localhost:5173",
+    optionsSuccessStatus: 200,
     credentials: true,
   })
 );
@@ -98,6 +99,7 @@ app.post("/api/sessions", (req, res, next) => {
         id: user.id,
         username: user.username,
         name: user.name,
+        surname: user.surname,
         role: user.role
       };
       res.status(201).json(userInfo);
@@ -114,6 +116,7 @@ app.get("/api/sessions/current", (req, res) => {
     id: req.user.id,
     username: req.user.username,
     name: req.user.name,
+    surname: req.user.surname,
     role: req.user.role    
   };
   res.json(userInfo);
@@ -152,6 +155,7 @@ app.post(
       const { question, studentIds } = req.body;
       const teacherId = req.user.id;
 
+      // TODO: validate that all studentIds exist in the database
       const canCreateGroup = await checkGroupCollaborations(studentIds, teacherId);
       if (!canCreateGroup) {
         return res.status(400).json({ 
@@ -159,7 +163,7 @@ app.post(
         });
       }
 
-      const taskId = await createtask(teacherId, question, studentIds);
+      const taskId = await createTask(teacherId, question, studentIds);
       res.status(201).json({ taskId, message: "task created successfully" });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -169,7 +173,7 @@ app.post(
 
 app.get("/api/tasks", isTeacher, async (req, res) => {
   try {
-    const tasks = await gettasksByTeacher(req.user.id);
+    const tasks = await getTasksByTeacher(req.user.id);
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -179,7 +183,7 @@ app.get("/api/tasks", isTeacher, async (req, res) => {
 app.get("/api/tasks/:id", isTeacher, async (req, res) => {
   try {
     const taskId = req.params.id;
-    const task = await gettaskById(taskId, req.user.id);
+    const task = await getTaskById(taskId, req.user.id);
     
     if (!task) {
       return res.status(404).json({ error: "task not found" });
@@ -191,6 +195,7 @@ app.get("/api/tasks/:id", isTeacher, async (req, res) => {
   }
 });
 
+// FIXME: make it a POST request to avoid accidental updates
 app.put(
   "/api/tasks/:id/score",
   isTeacher,
@@ -204,7 +209,7 @@ app.put(
       const { score } = req.body;
       const teacherId = req.user.id;
 
-      const task = await gettaskById(taskId, teacherId);
+      const task = await getTaskById(taskId, teacherId);
       if (!task) {
         return res.status(404).json({ error: "task not found" });
       }
@@ -217,8 +222,8 @@ app.put(
         return res.status(400).json({ error: "task is already closed" });
       }
 
-      await updatetaskscore(taskId, score);
-      await closetask(taskId);
+      await updateTaskScore(taskId, score);
+      await closeTask(taskId);
 
       res.json({ message: "task scored and closed successfully" });
     } catch (err) {
@@ -229,8 +234,7 @@ app.put(
 
 app.get("/api/class-overview", isTeacher, async (req, res) => {
   try {
-    const { sortBy = 'alphabetical' } = req.query;
-    const overview = await getClassOverview(req.user.id, sortBy);
+    const overview = await getClassOverview(req.user.id);
     res.json(overview);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -241,7 +245,7 @@ app.get("/api/class-overview", isTeacher, async (req, res) => {
 
 app.get("/api/tasks/open", isStudent, async (req, res) => {
   try {
-    const tasks = await getOpentasksByStudent(req.user.id);
+    const tasks = await getOpenTasksByStudent(req.user.id);
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -250,7 +254,7 @@ app.get("/api/tasks/open", isStudent, async (req, res) => {
 
 app.get("/api/tasks/closed", isStudent, async (req, res) => {
   try {
-    const tasks = await getClosedtasksByStudent(req.user.id);
+    const tasks = await getClosedTasksByStudent(req.user.id);
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -270,7 +274,7 @@ app.put(
       const { answer } = req.body;
       const studentId = req.user.id;
 
-      const task = await gettaskById(taskId);
+      const task = await getTaskById(taskId);
       if (!task) {
         return res.status(404).json({ error: "task not found" });
       }
@@ -284,7 +288,7 @@ app.put(
         return res.status(403).json({ error: "You are not part of this task group" });
       }
 
-      await updatetaskAnswer(taskId, answer);
+      await updateTaskAnswer(taskId, answer);
       res.json({ message: "Answer submitted successfully" });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -297,7 +301,7 @@ app.get("/api/tasks/:id/details", isStudent, async (req, res) => {
     const taskId = req.params.id;
     const studentId = req.user.id;
     
-    const task = await gettaskById(taskId);
+    const task = await getTaskById(taskId);
     if (!task) {
       return res.status(404).json({ error: "task not found" });
     }
@@ -330,6 +334,7 @@ app.get("/api/profile", isLoggedIn, async (req, res) => {
       id: req.user.id,
       username: req.user.username,
       name: req.user.name,
+      surname: req.user.surname,
       role: req.user.role
       };
     res.json(userInfo);

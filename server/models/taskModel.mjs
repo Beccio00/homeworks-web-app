@@ -1,3 +1,4 @@
+import e from 'cors';
 import dayjs from 'dayjs';
 
 function Task(id, teach_id, question, answer, score, status, created_at) {
@@ -9,3 +10,5 @@ function Task(id, teach_id, question, answer, score, status, created_at) {
     this.status = status;
     this.created_at = dayjs(created_at);
 }
+
+export default Task;
