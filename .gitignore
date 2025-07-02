@@ -5,3 +5,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# postman scirpt
+postman-collection.json
+
+#pdf
+AW1_esame2_Compiti.pdf
