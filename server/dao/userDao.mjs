@@ -37,7 +37,9 @@ export const getUser = (username, password) => {
                         )
                     ) {
                         resolve(false);
-                    } else resolve(user);
+                    } else {
+                        resolve(user);
+                    }
                 });
             }
         });

@@ -57,11 +57,13 @@ const isLoggedIn = (req, res, next) =>
     ? next()
     : res.status(401).json({ error: "Not authorized" });
 
+    //refactor
 const isTeacher = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authorized" });
   }
-  if (req.user.role !== 'teacher') {
+  //FIXME: only enlgish
+  if (req.user.role !== 'docente' && req.user.role !== 'teacher') {
     return res.status(403).json({ error: "Teacher access required" });
   }
   next();
@@ -71,7 +73,8 @@ const isStudent = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authorized" });
   }
-  if (req.user.role !== 'student') {
+  //FIXME: only enlgish
+  if (req.user.role !== 'student' && req.user.role !== 'studente') {
     return res.status(403).json({ error: "Student access required" });
   }
   next();
@@ -142,7 +145,7 @@ app.get("/api/students", isTeacher, async (req, res) => {
 });
 
 app.post(
-  "/api/tasks",
+  "/api/tasks/teacher",
   isTeacher,
   [
     body("question").isLength({ min: 1 }),
@@ -155,7 +158,14 @@ app.post(
       const { question, studentIds } = req.body;
       const teacherId = req.user.id;
 
-      // TODO: validate that all studentIds exist in the database
+      const existingStudentsId = (await getAllStudents()).map(s => s.id);
+      const invalidStudentIds = studentIds.filter(id => !existingStudentsId.includes(id));
+      if (invalidStudentIds.length > 0) {
+        return res.status(400).json({
+          error: `Invalid student IDs: ${invalidStudentIds.join(", ")}`
+        });
+      }
+
       const canCreateGroup = await checkGroupCollaborations(studentIds, teacherId);
       if (!canCreateGroup) {
         return res.status(400).json({ 
@@ -171,7 +181,7 @@ app.post(
   }
 );
 
-app.get("/api/tasks", isTeacher, async (req, res) => {
+app.get("/api/tasks/teacher", isTeacher, async (req, res) => {
   try {
     const tasks = await getTasksByTeacher(req.user.id);
     res.json(tasks);
@@ -180,7 +190,7 @@ app.get("/api/tasks", isTeacher, async (req, res) => {
   }
 });
 
-app.get("/api/tasks/:id", isTeacher, async (req, res) => {
+app.get("/api/tasks/teacher/:id", isTeacher, async (req, res) => {
   try {
     const taskId = req.params.id;
     const task = await getTaskById(taskId, req.user.id);
@@ -195,9 +205,8 @@ app.get("/api/tasks/:id", isTeacher, async (req, res) => {
   }
 });
 
-// FIXME: make it a POST request to avoid accidental updates
 app.put(
-  "/api/tasks/:id/score",
+  "/api/tasks/teacher/:id/score",
   isTeacher,
   [
     body("score").isFloat({ min: 0, max: 30 })
@@ -243,7 +252,7 @@ app.get("/api/class-overview", isTeacher, async (req, res) => {
 
 /* --- STUDENT ROUTES --- */
 
-app.get("/api/tasks/open", isStudent, async (req, res) => {
+app.get("/api/tasks/student/open", isStudent, async (req, res) => {
   try {
     const tasks = await getOpenTasksByStudent(req.user.id);
     res.json(tasks);
@@ -252,7 +261,7 @@ app.get("/api/tasks/open", isStudent, async (req, res) => {
   }
 });
 
-app.get("/api/tasks/closed", isStudent, async (req, res) => {
+app.get("/api/tasks/student/closed", isStudent, async (req, res) => {
   try {
     const tasks = await getClosedTasksByStudent(req.user.id);
     res.json(tasks);
@@ -262,7 +271,7 @@ app.get("/api/tasks/closed", isStudent, async (req, res) => {
 });
 
 app.put(
-  "/api/tasks/:id/answer",
+  "/api/tasks/student/:id/answer",
   isStudent,
   [
     body("answer").isLength({ min: 1 })
@@ -296,7 +305,7 @@ app.put(
   }
 );
 
-app.get("/api/tasks/:id/details", isStudent, async (req, res) => {
+app.get("/api/tasks/student/:id/details", isStudent, async (req, res) => {
   try {
     const taskId = req.params.id;
     const studentId = req.user.id;

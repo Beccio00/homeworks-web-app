@@ -1,14 +1,15 @@
-import db from '../data/db.mjs';
+import  db  from '../data/db.mjs';
 
 // Get all students
 export const getAllStudents = () => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT username, name, surname, avatar FROM users WHERE role = "student" ORDER BY surnrame, name';
+    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE role IN ("student", "studente") ORDER BY surname, name';
     db.all(sql, [], (err, rows) => {
       if (err)
         reject(err);
       else {
         const students = rows.map(row => ({
+          id: row.id,   
           username: row.username,
           name: row.name,
           surname: row.surname,
@@ -43,7 +44,7 @@ export const getStudentById = (studentId) => {
 };
 
 // Check if a group of students can collaborate (max 2 previous collaborations for any pair)
-export const checkGroupCollaborations = (studentIds, teacherId) => {
+export const checkGroupCollaborations = (studentIds, teacherId) => { //FIXME: don't work
   return new Promise((resolve, reject) => {
     const pairs = [];
     for (let i = 0; i < studentIds.length; i++) {

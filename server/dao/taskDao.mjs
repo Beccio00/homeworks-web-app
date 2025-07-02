@@ -101,7 +101,7 @@ export const getTaskById = (taskId, teacherId = null) => {
         resolve(null);
       else {
         const sqlStudents = `
-          SELECT u.id, u.name, u.surname, u.avatar
+          SELECT u.id, u.username, u.name, u.surname, u.avatar
           FROM users u
           JOIN task_students tk ON u.id = tk.student_id
           WHERE tk.task_id = ?
