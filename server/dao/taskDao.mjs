@@ -208,62 +208,144 @@ export const getOpenTasksByStudent = (studentId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT a.*, u_teacher.name as teacher_name, u_teacher.surname as teacher_surname,
-             COUNT(tk2.student_id) as student_count,
-             GROUP_CONCAT(u_students.name || ' ' || u_students.surname, ', ') as student_names
+             u_teacher.username as teacher_username, u_teacher.avatar as teacher_avatar,
+             COUNT(tk2.student_id) as student_count
       FROM tasks a
       JOIN task_students tk ON a.id = tk.task_id
       JOIN users u_teacher ON a.teacher_id = u_teacher.id
       JOIN task_students tk2 ON a.id = tk2.task_id
-      JOIN users u_students ON tk2.student_id = u_students.id
       WHERE tk.student_id = ? AND a.status = "open"
       GROUP BY a.id
       ORDER BY a.created_at DESC
     `;
     
-
     db.all(sql, [studentId], (err, rows) => {
-      if (err)
+      if (err) {
         reject(err);
-      else {
+        return;
+      }
+
+      if (rows.length === 0) {
+        resolve([]);
+        return;
+      }
+
+      const taskIds = rows.map(row => row.id);
+      const placeholders = taskIds.map(() => '?').join(',');
+      
+      const sqlStudents = `
+        SELECT tk.task_id, u.name, u.surname, u.username, u.avatar, u.role
+        FROM task_students tk
+        JOIN users u ON tk.student_id = u.id
+        WHERE tk.task_id IN (${placeholders})
+        ORDER BY tk.task_id, u.name, u.surname
+      `;
+
+      db.all(sqlStudents, taskIds, (err, studentRows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        // Raggruppa gli studenti per task
+        const studentsByTask = {};
+        studentRows.forEach(student => {
+          if (!studentsByTask[student.task_id]) {
+            studentsByTask[student.task_id] = [];
+          }
+          studentsByTask[student.task_id].push({
+            name: student.name,
+            surname: student.surname,
+            username: student.username,
+            avatar: student.avatar,
+            role: student.role
+          });
+        });
+
         const tasks = rows.map(row => ({
           id: row.id,
           question: row.question,
           answer: row.answer,
           createdAt: row.created_at,
-          teacherName: row.teacher_name,
-          teacherSurname: row.teacher_surname,
-          studentCount: row.student_count,
-          studentNames: row.student_names
+          teacher: {
+            name: row.teacher_name,
+            surname: row.teacher_surname,
+            username: row.teacher_username,
+            avatar: row.teacher_avatar
+          },
+          students: studentsByTask[row.id] || [],
+          studentCount: row.student_count
         }));
+        
         resolve(tasks);
-      }
+      });
     });
   });
 };
-
-//FIXME: undersand if created_at is needed in the response
 
 // Get closed tasks for a student with scores
 export const getClosedTasksByStudent = (studentId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT a.*, u_teacher.name as teacher_name, u_teacher.surname as teacher_surname,
-             COUNT(tk2.student_id) as group_size,
-             GROUP_CONCAT(u_students.name || ' ' || u_students.surname, ', ') as student_names
+             u_teacher.username as teacher_username, u_teacher.avatar as teacher_avatar,
+             COUNT(tk2.student_id) as group_size
       FROM tasks a
       JOIN task_students tk ON a.id = tk.task_id
       JOIN users u_teacher ON a.teacher_id = u_teacher.id
       JOIN task_students tk2 ON a.id = tk2.task_id
-      JOIN users u_students ON tk2.student_id = u_students.id
       WHERE tk.student_id = ? AND a.status = "closed"
       GROUP BY a.id
       ORDER BY a.created_at DESC
     `;
     
     db.all(sql, [studentId], (err, rows) => {
-      if (err)
+      if (err) {
         reject(err);
-      else {
+        return;
+      }
+
+      if (rows.length === 0) {
+        resolve({
+          tasks: [],
+          weightedAverage: 0
+        });
+        return;
+      }
+
+      // Per ogni task, ottieni i dettagli completi degli studenti del gruppo
+      const taskIds = rows.map(row => row.id);
+      const placeholders = taskIds.map(() => '?').join(',');
+      
+      const sqlStudents = `
+        SELECT tk.task_id, u.name, u.surname, u.username, u.avatar, u.role
+        FROM task_students tk
+        JOIN users u ON tk.student_id = u.id
+        WHERE tk.task_id IN (${placeholders})
+        ORDER BY tk.task_id, u.name, u.surname
+      `;
+
+      db.all(sqlStudents, taskIds, (err, studentRows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        // Raggruppa gli studenti per task
+        const studentsByTask = {};
+        studentRows.forEach(student => {
+          if (!studentsByTask[student.task_id]) {
+            studentsByTask[student.task_id] = [];
+          }
+          studentsByTask[student.task_id].push({
+            name: student.name,
+            surname: student.surname,
+            username: student.username,
+            avatar: student.avatar,
+            role: student.role
+          });
+        });
+
         const tasks = rows.map(row => ({
           id: row.id,
           question: row.question,
@@ -271,9 +353,13 @@ export const getClosedTasksByStudent = (studentId) => {
           score: row.score,
           groupSize: row.group_size,
           createdAt: row.created_at,
-          teacherName: row.teacher_name,
-          teacherSurname: row.teacher_surname,
-          studentNames: row.student_names
+          teacher: {
+            name: row.teacher_name,
+            surname: row.teacher_surname,
+            username: row.teacher_username,
+            avatar: row.teacher_avatar
+          },
+          students: studentsByTask[row.id] || []
         }));
 
         const calculateWeightedAverage = (tasks) => {
@@ -294,9 +380,9 @@ export const getClosedTasksByStudent = (studentId) => {
         
         resolve({
           tasks,
-          weightedAverage,
+          weightedAverage
         });
-      }
+      });
     });
   });
 };
@@ -385,7 +471,6 @@ export const getClassOverview = (teacherId) => {
         };
       });
 
-      // Ora eseguiamo le query per i task globali del teacher
       const sql_open_tasks = `
         SELECT COUNT(*) as count 
         FROM tasks 

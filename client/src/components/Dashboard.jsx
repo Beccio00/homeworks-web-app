@@ -22,8 +22,7 @@ const Dashboard = (props) => {
         try {
             setLoading(true);
             const data = await API.getClassOverview();
-            
-            // Calcolo la media pesata della classe
+
             const studentsWithScores = data.students?.filter(student => student.averageScore > 0) || [];
             const classAverage = studentsWithScores.length > 0 
                 ? studentsWithScores.reduce((sum, student) => sum + student.averageScore, 0) / studentsWithScores.length
@@ -60,9 +59,8 @@ const Dashboard = (props) => {
         </Col>
       </Row>
 
-      <Row>
-        {/* Colonna sinistra - Profilo utente */}
-        <Col md={4} className="mb-4">
+      <Row className="h-100">
+        <Col className="mb-4">
           <Card className="h-100">
             <Card.Header>
               <h5 className="mb-0">👤 Il Tuo Profilo</h5>
@@ -72,9 +70,9 @@ const Dashboard = (props) => {
                 <Avatar {...props.user} size={170} />
               </div>
               <h4 className="mb-1">{props.user.name} {props.user.surname}</h4>
-              <p className="text-muted mb-2">{props.user.role === 'teacher' ? 'Codice insegnante: ' : 'Metricola: '}{props.user.username}</p>
+              <p className="text-muted mb-2">{props.user.role === 'teacher' ? 'Codice insegnante: ' : 'Matricola: '}{props.user.username}</p>
               <div className="bg-light rounded p-2 mb-3">
-                <span className={`ms-1`}>
+                <span>
                   {props.user.role === 'teacher' ? '🎓 Insegnante' : '📚 Studente'}
                 </span>
               </div>
@@ -83,9 +81,8 @@ const Dashboard = (props) => {
           </Card>
         </Col>
 
-        {/* Colonna destra - Funzionalità */}
-        <Col md={8}>
-          <Card>
+        <Col md={8} className="mb-4">
+          <Card className="h-100">
             <Card.Header>
               <h5 className="mb-0">
                 {props.user.role === 'teacher' ? '🏫 Dashboard Insegnante' : '📖 Dashboard Studente'}
@@ -100,7 +97,7 @@ const Dashboard = (props) => {
                         <Card.Body className="text-center">
                           <div className="display-6 text-primary mb-2">📝</div>
                           <h6>Gestione Compiti</h6>
-                          <p className="text-muted small">Visualizza, valuta e crea nuovi compiti per i tuoi studenti</p>
+                          <p className="text-muted small">Visualizza, valuta o crea nuovi compiti per i tuoi studenti</p>
                           <Button variant="primary" as={Link} to="/tasks" className="mt-auto">
                             Vai alla Gestione
                           </Button>
@@ -112,7 +109,7 @@ const Dashboard = (props) => {
                         <Card.Body className="text-center">
                           <div className="display-6 text-info mb-2">📊</div>
                           <h6>Monitoraggio Classe</h6>
-                          <p className="text-muted small">Monitora i progressi e le statistiche della tua classe</p>
+                          <p className="text-muted small">Visualizza gli studenti della tua classe e i loro voti</p>
                           <Button variant="info" as={Link} to="/progress" className="mt-auto">
                             Visualizza Progressi
                           </Button>
@@ -121,7 +118,6 @@ const Dashboard = (props) => {
                     </Col>
                   </Row>
                   
-                  {/* Grafico statistiche insegnante */}
                   <Row className="mt-3">
                     <Col>
                       <Card className="border-success">
@@ -148,12 +144,6 @@ const Dashboard = (props) => {
                                   <p className="mb-2">
                                     <strong>📊 Media classe:</strong> {studentAverage.toFixed(1)}/30
                                   </p>
-                                  <div className={`badge ${studentAverage >= 24 ? 'bg-success' : studentAverage >= 18 ? 'bg-warning' : 'bg-danger'} fs-6 p-2`}>
-                                    {studentAverage >= 28 ? '🏆 Eccellente' : 
-                                     studentAverage >= 24 ? '👍 Ottima' : 
-                                     studentAverage >= 18 ? '📚 Buona' : 
-                                     studentAverage > 0 ? '📈 Da migliorare' : 'Nessun dato'}
-                                  </div>
                                 </div>
                               </Col>
                             </Row>
@@ -180,7 +170,6 @@ const Dashboard = (props) => {
                     </Col>
                   </Row>
                   
-                  {/* Grafico statistiche studente */}
                   <Row className="mt-3">
                     <Col>
                       <Card className="border-info">
@@ -207,21 +196,6 @@ const Dashboard = (props) => {
                                   <p className="mb-2">
                                     <strong>📊 Media pesata:</strong> {studentAverage.toFixed(1)}/30
                                   </p>
-                                  <div className={`badge ${studentAverage >= 24 ? 'bg-success' : studentAverage >= 18 ? 'bg-warning' : 'bg-danger'} fs-6 p-2`}>
-                                    {studentAverage >= 28 ? '🏆 Eccellente!' :
-                                     studentAverage >= 24 ? '👍 Buono!' :
-                                     studentAverage >= 18 ? '📚 Sufficiente' :
-                                     studentAverage > 0 ? '📈 Insufficiente' : 'Nessun voto'}
-                                  </div>
-                                  {studentAverage > 0 && (
-                                    <div className="mt-2">
-                                      <small className="text-muted">
-                                        {studentAverage >= 24 ? '🎉 Continua così!' :
-                                         studentAverage >= 18 ? '💪 Puoi migliorare!' :
-                                         '📖 Non arrenderti!'}
-                                      </small>
-                                    </div>
-                                  )}
                                 </div>
                               </Col>
                             </Row>
