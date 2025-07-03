@@ -1,58 +1,129 @@
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import Avatar from './Avatar';
 
 const Dashboard = (props) => {
     return (
     <Container className="mt-4">
       <Row>
         <Col>
-          <h2>Benvenuto, {props.user.name}!</h2>
+          <h2>Benvenuto nella tua Dashboard!</h2>
           <p className="text-muted mb-4">
-            Ruolo: <strong>{props.user.role === 'teacher' ? 'Insegnante' : 'Studente'}</strong>
+            Gestisci i tuoi compiti e monitora i progressi
           </p>
+        </Col>
+      </Row>
 
-          <Card className="mb-4">
+      <Row>
+        {/* Colonna sinistra - Profilo utente */}
+        <Col md={4} className="mb-4">
+          <Card className="h-100">
             <Card.Header>
-              <h5 className="mb-0">Informazioni Profilo</h5>
+              <h5 className="mb-0">👤 Il Tuo Profilo</h5>
             </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col sm={6}>
-                  <strong>Nome Completo:</strong> {props.user.name} {props.user.surname}
-                </Col>
-                <Col sm={6}>
-                  <strong>Nome Utente:</strong> {props.user.username}
-                </Col>
-              </Row>
+            <Card.Body className="text-center">
+              <div className="mb-3">
+                <Avatar {...props.user} size={170} />
+              </div>
+              <h4 className="mb-1">{props.user.name} {props.user.surname}</h4>
+              <p className="text-muted mb-2">{props.user.role === 'teacher' ? 'Codice insegnante: ' : 'Metricola: '}{props.user.username}</p>
+              <div className="bg-light rounded p-2 mb-3">
+                <span className={`ms-1`}>
+                  {props.user.role === 'teacher' ? '🎓 Insegnante' : '📚 Studente'}
+                </span>
+              </div>
+
             </Card.Body>
           </Card>
+        </Col>
 
+        {/* Colonna destra - Funzionalità */}
+        <Col md={8}>
           <Card>
             <Card.Header>
               <h5 className="mb-0">
-                {props.user.role === 'teacher' ? 'Dashboard Insegnante' : 'Dashboard Studente'}
+                {props.user.role === 'teacher' ? '🏫 Dashboard Insegnante' : '📖 Dashboard Studente'}
               </h5>
             </Card.Header>
             <Card.Body>
               {props.user.role === 'teacher' ? (
-                <div className="text-center">
-                  <Button variant="primary" className="d-block mb-2" as={Link} to="/tasks">
-                    📝 Crea e gestisci compiti
-                  </Button>
-                  <Button variant="primary" className="d-block mb-2" as={Link} to="/evaluation">
-                    👥 Visualizza e valuta consegne studenti
-                  </Button>
-                  <Button variant="primary" className="d-block" as={Link} to="/progress">
-                    📊 Monitora i progressi della classe
-                  </Button>
-                </div>
+                <Row>
+                  <Col sm={6} className="mb-3">
+                    <Card className="h-100 border-primary">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-primary mb-2">📝</div>
+                        <h6>Gestione Compiti</h6>
+                        <p className="text-muted small">Crea e gestisci i compiti per i tuoi studenti</p>
+                        <Button variant="primary" as={Link} to="/tasks" className="mt-auto">
+                          Vai ai Compiti
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col sm={6} className="mb-3">
+                    <Card className="h-100 border-success">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-success mb-2">👥</div>
+                        <h6>Valutazione</h6>
+                        <p className="text-muted small">Visualizza e valuta le consegne degli studenti</p>
+                        <Button variant="success" as={Link} to="/evaluation" className="mt-auto">
+                          Vai alle Valutazioni
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col sm={12}>
+                    <Card className="border-info">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-info mb-2">📊</div>
+                        <h6>Monitoraggio Classe</h6>
+                        <p className="text-muted small">Monitora i progressi e le statistiche della tua classe</p>
+                        <Button variant="info" as={Link} to="/progress" className="mt-auto">
+                          Visualizza Progressi
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
               ) : (
-                <ul className="list-unstyled">
-                  <li className="mb-2">📋 Visualizza i tuoi compiti</li>
-                  <li className="mb-2">📤 Consegna i tuoi lavori</li>
-                  <li className="mb-2">🏆 Visualizza i tuoi voti</li>
-                  <li className="mb-2">📈 Monitora i tuoi progressi</li>
-                </ul>
+                <Row>
+                  <Col sm={6} className="mb-3">
+                    <Card className="h-100 border-primary">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-primary mb-2">📋</div>
+                        <h6>I Tuoi Compiti</h6>
+                        <p className="text-muted small">Visualizza i compiti assegnati</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col sm={6} className="mb-3">
+                    <Card className="h-100 border-warning">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-warning mb-2">📤</div>
+                        <h6>Consegne</h6>
+                        <p className="text-muted small">Consegna i tuoi lavori</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col sm={6} className="mb-3">
+                    <Card className="h-100 border-success">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-success mb-2">🏆</div>
+                        <h6>I Tuoi Voti</h6>
+                        <p className="text-muted small">Visualizza le tue valutazioni</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col sm={6} className="mb-3">
+                    <Card className="h-100 border-info">
+                      <Card.Body className="text-center">
+                        <div className="display-6 text-info mb-2">📈</div>
+                        <h6>Progressi</h6>
+                        <p className="text-muted small">Monitora i tuoi progressi</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
               )}
             </Card.Body>
           </Card>

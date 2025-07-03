@@ -5,6 +5,7 @@ import DefaultLayout from "./components/DefaultLayout";
 import Dashboard from "./components/Dashboard";
 import CreateTasks from "./components/CreateTasks";
 import Evaluation from "./components/Evaluation";
+import TaskDatails from "./components/TaskDetails";
 import { LoginForm } from "./components/AuthComponents";
 import NotFound from "./components/NotFound";
 import { API } from "./API/API.mjs";
@@ -60,7 +61,7 @@ function App() {
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
         <Route path="/tasks" element={loggedIn && user?.role === 'teacher' ? <CreateTasks user={user} /> : <Navigate replace to='/login' />} />
         <Route path="/evaluation" element={loggedIn && user?.role === 'teacher' ? <Evaluation user={user} /> : <Navigate replace to='/login' />} />
-        <Route path="/progress" element={loggedIn && user?.role === 'teacher' ? <div>Monitora i progressi della classe</div> : <Navigate replace to='/login' />} />
+        <Route path="/progress" element={loggedIn && user?.role === 'teacher' ? <TaskDatails user={user} /> : <Navigate replace to='/login' />} />
         
         <Route path="*" element={<NotFound />} />
       </Route>

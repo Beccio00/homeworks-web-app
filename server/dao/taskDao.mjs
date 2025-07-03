@@ -68,7 +68,7 @@ export const getTasksByTeacher = (teacherId) => {
       const placeholders = taskIds.map(() => '?').join(',');
       
       const sqlStudents = `
-        SELECT tk.task_id, u.id, u.name, u.surname, u.username, u.avatar
+        SELECT tk.task_id, u.id, u.name, u.surname, u.username, u.avatar, u.role
         FROM task_students tk
         JOIN users u ON tk.student_id = u.id
         WHERE tk.task_id IN (${placeholders})
@@ -91,7 +91,8 @@ export const getTasksByTeacher = (teacherId) => {
             name: student.name,
             surname: student.surname,
             username: student.username,
-            avatar: student.avatar
+            avatar: student.avatar,
+            role: student.role
           });
         });
 
@@ -219,6 +220,7 @@ export const getOpenTasksByStudent = (studentId) => {
       ORDER BY a.created_at DESC
     `;
     
+
     db.all(sql, [studentId], (err, rows) => {
       if (err)
         reject(err);
@@ -303,7 +305,7 @@ export const getClosedTasksByStudent = (studentId) => {
 export const getClassOverview = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT u.id, u.name, u.surname, u.username, u.avatar,
+      SELECT u.id, u.name, u.surname, u.username, u.avatar, u.role,
              a.id as task_id, a.status, a.score,
              group_sizes.group_size
       FROM users u
@@ -334,6 +336,7 @@ export const getClassOverview = (teacherId) => {
             surname: row.surname,
             username: row.username,
             avatar: row.avatar,
+            role: row.role,
             tasks: []
           });
         }
@@ -374,6 +377,7 @@ export const getClassOverview = (teacherId) => {
           surname: student.surname,
           username: student.username,
           avatar: student.avatar,
+          role: student.role,
           openTasks,
           closedTasks,
           totalTasks,
@@ -381,7 +385,43 @@ export const getClassOverview = (teacherId) => {
         };
       });
 
-      resolve(students);
+      // Ora eseguiamo le query per i task globali del teacher
+      const sql_open_tasks = `
+        SELECT COUNT(*) as count 
+        FROM tasks 
+        WHERE teacher_id = ? AND status = "open"`;
+
+      const sql_closed_tasks = `
+        SELECT COUNT(*) as count 
+        FROM tasks 
+        WHERE teacher_id = ? AND status = "closed"`;
+
+      db.get(sql_open_tasks, [teacherId], (err, openRow) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        db.get(sql_closed_tasks, [teacherId], (err, closedRow) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          const totalOpenTasks = openRow.count;
+          const totalClosedTasks = closedRow.count;
+          const totalTasks = totalOpenTasks + totalClosedTasks;
+
+          const result = {
+            students,
+            totalOpenTasks,
+            totalClosedTasks,
+            totalTasks
+          };
+
+          resolve(result);
+        });
+      });
     });
   });
 };
