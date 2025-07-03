@@ -1,8 +1,54 @@
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { API } from '../API/API.mjs';
 import Avatar from './Avatar';
+import GaugeChart from './GaugeChart';
 
 const Dashboard = (props) => {
+    const [loading, setLoading] = useState(true);
+    const [studentAverage, setStudentAverage] = useState(0);
+    const [totalStudents, setTotalStudents] = useState(0);
+
+    useEffect(() => {
+        if (props.user.role === 'teacher') {
+            fetchTeacherStats();
+        } else if (props.user.role === 'student') {
+            fetchStudentStats();
+        }
+    }, [props.user.role]);
+
+    const fetchTeacherStats = async () => {
+        try {
+            setLoading(true);
+            const data = await API.getClassOverview();
+            
+            // Calcolo la media pesata della classe
+            const studentsWithScores = data.students?.filter(student => student.averageScore > 0) || [];
+            const classAverage = studentsWithScores.length > 0 
+                ? studentsWithScores.reduce((sum, student) => sum + student.averageScore, 0) / studentsWithScores.length
+                : 0;
+            setStudentAverage(classAverage);
+            setTotalStudents(data.students?.length || 0);
+        } catch (err) {
+            console.error('Errore nel caricamento statistiche insegnante:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchStudentStats = async () => {
+        try {
+            setLoading(true);
+            const data = await API.getClosedTasks();
+            setStudentAverage(data.weightedAverage || 0);
+            setTotalStudents(data.tasks?.length || 0);
+        } catch (err) {
+            console.error('Errore nel caricamento statistiche studente:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
     <Container className="mt-4">
       <Row>
@@ -47,83 +93,144 @@ const Dashboard = (props) => {
             </Card.Header>
             <Card.Body>
               {props.user.role === 'teacher' ? (
-                <Row>
-                  <Col sm={6} className="mb-3">
-                    <Card className="h-100 border-primary">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-primary mb-2">📝</div>
-                        <h6>Gestione Compiti</h6>
-                        <p className="text-muted small">Crea e gestisci i compiti per i tuoi studenti</p>
-                        <Button variant="primary" as={Link} to="/tasks" className="mt-auto">
-                          Vai ai Compiti
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col sm={6} className="mb-3">
-                    <Card className="h-100 border-success">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-success mb-2">👥</div>
-                        <h6>Valutazione</h6>
-                        <p className="text-muted small">Visualizza e valuta le consegne degli studenti</p>
-                        <Button variant="success" as={Link} to="/evaluation" className="mt-auto">
-                          Vai alle Valutazioni
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col sm={12}>
-                    <Card className="border-info">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-info mb-2">📊</div>
-                        <h6>Monitoraggio Classe</h6>
-                        <p className="text-muted small">Monitora i progressi e le statistiche della tua classe</p>
-                        <Button variant="info" as={Link} to="/progress" className="mt-auto">
-                          Visualizza Progressi
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
+                <>
+                  <Row>
+                    <Col sm={6} className="mb-3">
+                      <Card className="h-100 border-primary">
+                        <Card.Body className="text-center">
+                          <div className="display-6 text-primary mb-2">📝</div>
+                          <h6>Gestione Compiti</h6>
+                          <p className="text-muted small">Visualizza, valuta e crea nuovi compiti per i tuoi studenti</p>
+                          <Button variant="primary" as={Link} to="/tasks" className="mt-auto">
+                            Vai alla Gestione
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                    <Col sm={6} className="mb-3">
+                      <Card className="h-100 border-info">
+                        <Card.Body className="text-center">
+                          <div className="display-6 text-info mb-2">📊</div>
+                          <h6>Monitoraggio Classe</h6>
+                          <p className="text-muted small">Monitora i progressi e le statistiche della tua classe</p>
+                          <Button variant="info" as={Link} to="/progress" className="mt-auto">
+                            Visualizza Progressi
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                  
+                  {/* Grafico statistiche insegnante */}
+                  <Row className="mt-3">
+                    <Col>
+                      <Card className="border-success">
+                        <Card.Body>
+                          <h6 className="mb-3">📈 Media Classe</h6>
+                          {loading ? (
+                            <div className="text-center py-2">
+                              <small>Caricamento...</small>
+                            </div>
+                          ) : studentAverage === 0 ? (
+                            <div className="text-center py-2">
+                              <small className="text-muted">Nessun dato disponibile</small>
+                            </div>
+                          ) : (
+                            <Row>
+                              <Col lg={6}>
+                                <GaugeChart value={studentAverage} />
+                              </Col>
+                              <Col lg={6} className="d-flex align-items-center">
+                                <div>
+                                  <p className="mb-2">
+                                    <strong>👥 Studenti totali:</strong> {totalStudents}
+                                  </p>
+                                  <p className="mb-2">
+                                    <strong>📊 Media classe:</strong> {studentAverage.toFixed(1)}/30
+                                  </p>
+                                  <div className={`badge ${studentAverage >= 24 ? 'bg-success' : studentAverage >= 18 ? 'bg-warning' : 'bg-danger'} fs-6 p-2`}>
+                                    {studentAverage >= 28 ? '🏆 Eccellente' : 
+                                     studentAverage >= 24 ? '👍 Ottima' : 
+                                     studentAverage >= 18 ? '📚 Buona' : 
+                                     studentAverage > 0 ? '📈 Da migliorare' : 'Nessun dato'}
+                                  </div>
+                                </div>
+                              </Col>
+                            </Row>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </>
               ) : (
-                <Row>
-                  <Col sm={6} className="mb-3">
-                    <Card className="h-100 border-primary">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-primary mb-2">📋</div>
-                        <h6>I Tuoi Compiti</h6>
-                        <p className="text-muted small">Visualizza i compiti assegnati</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col sm={6} className="mb-3">
-                    <Card className="h-100 border-warning">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-warning mb-2">📤</div>
-                        <h6>Consegne</h6>
-                        <p className="text-muted small">Consegna i tuoi lavori</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col sm={6} className="mb-3">
-                    <Card className="h-100 border-success">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-success mb-2">🏆</div>
-                        <h6>I Tuoi Voti</h6>
-                        <p className="text-muted small">Visualizza le tue valutazioni</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col sm={6} className="mb-3">
-                    <Card className="h-100 border-info">
-                      <Card.Body className="text-center">
-                        <div className="display-6 text-info mb-2">📈</div>
-                        <h6>Progressi</h6>
-                        <p className="text-muted small">Monitora i tuoi progressi</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
+                <>
+                  <Row>
+                    <Col className="mb-3">
+                      <Card className="h-100 border-primary">
+                        <Card.Body className="text-center">
+                          <div className="display-6 text-primary mb-2">📋</div>
+                          <h6>I Tuoi Compiti</h6>
+                          <p className="text-muted small">Visualizza o completa i compiti assegnati</p>
+                          <Button variant="primary" as={Link} to="/tasks" className="mt-auto">
+                            Vai ai Compiti
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                  
+                  {/* Grafico statistiche studente */}
+                  <Row className="mt-3">
+                    <Col>
+                      <Card className="border-info">
+                        <Card.Body>
+                          <h6 className="mb-3">⭐ La Tua Media</h6>
+                          {loading ? (
+                            <div className="text-center py-2">
+                              <small>Caricamento...</small>
+                            </div>
+                          ) : studentAverage === 0 ? (
+                            <div className="text-center py-2">
+                              <small className="text-muted">Non hai ancora voti registrati</small>
+                            </div>
+                          ) : (
+                            <Row>
+                              <Col lg={6}>
+                                <GaugeChart value={studentAverage} />
+                              </Col>
+                              <Col lg={6} className="d-flex align-items-center">
+                                <div>
+                                  <p className="mb-2">
+                                    <strong>📝 Compiti completati:</strong> {totalStudents}
+                                  </p>
+                                  <p className="mb-2">
+                                    <strong>📊 Media pesata:</strong> {studentAverage.toFixed(1)}/30
+                                  </p>
+                                  <div className={`badge ${studentAverage >= 24 ? 'bg-success' : studentAverage >= 18 ? 'bg-warning' : 'bg-danger'} fs-6 p-2`}>
+                                    {studentAverage >= 28 ? '🏆 Eccellente!' :
+                                     studentAverage >= 24 ? '👍 Buono!' :
+                                     studentAverage >= 18 ? '📚 Sufficiente' :
+                                     studentAverage > 0 ? '📈 Insufficiente' : 'Nessun voto'}
+                                  </div>
+                                  {studentAverage > 0 && (
+                                    <div className="mt-2">
+                                      <small className="text-muted">
+                                        {studentAverage >= 24 ? '🎉 Continua così!' :
+                                         studentAverage >= 18 ? '💪 Puoi migliorare!' :
+                                         '📖 Non arrenderti!'}
+                                      </small>
+                                    </div>
+                                  )}
+                                </div>
+                              </Col>
+                            </Row>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </>
               )}
             </Card.Body>
           </Card>

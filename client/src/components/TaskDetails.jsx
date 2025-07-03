@@ -8,8 +8,8 @@ const TaskDetails = (props) => {
     const [totalStats, setTotalStats] = useState({ totalOpenTasks: 0, totalClosedTasks: 0, totalTasks: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [sortBy, setSortBy] = useState('name'); // 'name', 'totalTasks', 'averageScore'
-    const [sortOrder, setSortOrder] = useState('asc'); // 'asc', 'desc'
+    const [sortBy, setSortBy] = useState('name');
+    const [sortOrder, setSortOrder] = useState('asc');
 
     useEffect(() => {
         if (props.user.role === 'teacher') {
@@ -181,11 +181,10 @@ const TaskDetails = (props) => {
                                             <Table responsive hover>
                                                 <thead>
                                                     <tr>
-                                                        <th style={{ width: '35%' }}>Studente</th>
-                                                        <th style={{ width: '15%' }}>Aperti</th>
-                                                        <th style={{ width: '15%' }}>Chiusi</th>
-                                                        <th style={{ width: '20%' }}>Stato</th>
-                                                        <th style={{ width: '15%' }}>Media</th>
+                                                        <th style={{ width: '50%' }}>Studente</th>
+                                                        <th style={{ width: '17%' }}>Aperti</th>
+                                                        <th style={{ width: '17%' }}>Chiusi</th>
+                                                        <th style={{ width: '16%' }}>Media</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -213,11 +212,6 @@ const TaskDetails = (props) => {
                                                                 <Badge bg={student.closedTasks > 0 ? "success" : "secondary"}>
                                                                     {student.closedTasks}
                                                                 </Badge>
-                                                            </td>
-                                                            <td>
-                                                                <small className="text-muted">
-                                                                    {getTasksStatusText(student.openTasks, student.closedTasks, student.totalTasks)}
-                                                                </small>
                                                             </td>
                                                             <td>
                                                                 {student.averageScore > 0 ? (

@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import DefaultLayout from "./components/DefaultLayout";
 import Dashboard from "./components/Dashboard";
 import CreateTasks from "./components/CreateTasks";
-import Evaluation from "./components/Evaluation";
+import TaskManagement from "./components/TaskManagement";
 import TaskDatails from "./components/TaskDetails";
 import { LoginForm } from "./components/AuthComponents";
 import NotFound from "./components/NotFound";
@@ -59,8 +59,8 @@ function App() {
         <Route path="/" element={loggedIn ? <Navigate replace to='/dashboard' /> : <Navigate replace to='/login' />} />
         <Route path="/dashboard" element={loggedIn ? <Dashboard user={user} /> : <Navigate replace to='/login' />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
-        <Route path="/tasks" element={loggedIn && user?.role === 'teacher' ? <CreateTasks user={user} /> : <Navigate replace to='/login' />} />
-        <Route path="/evaluation" element={loggedIn && user?.role === 'teacher' ? <Evaluation user={user} /> : <Navigate replace to='/login' />} />
+        <Route path="/tasks" element={loggedIn && user?.role === 'teacher' ? <TaskManagement user={user} /> : loggedIn && user?.role === 'student' ? <TaskManagement user={user} /> : <Navigate replace to='/login' />} />
+        <Route path="/tasks/new" element={loggedIn && user?.role === 'teacher' ? <CreateTasks user={user} /> : <Navigate replace to='/login' />} />
         <Route path="/progress" element={loggedIn && user?.role === 'teacher' ? <TaskDatails user={user} /> : <Navigate replace to='/login' />} />
         
         <Route path="*" element={<NotFound />} />
