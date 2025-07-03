@@ -3,7 +3,7 @@ import  db  from '../data/db.mjs';
 // Get all students
 export const getAllStudents = () => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE role IN ("student", "studente") ORDER BY surname, name';
+    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE role = "student" ORDER BY surname, name';
     db.all(sql, [], (err, rows) => {
       if (err)
         reject(err);

@@ -62,8 +62,7 @@ const isTeacher = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authorized" });
   }
-  //FIXME: only enlgish
-  if (req.user.role !== 'docente' && req.user.role !== 'teacher') {
+  if (req.user.role !== 'teacher') {
     return res.status(403).json({ error: "Teacher access required" });
   }
   next();
@@ -73,8 +72,7 @@ const isStudent = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authorized" });
   }
-  //FIXME: only enlgish
-  if (req.user.role !== 'student' && req.user.role !== 'studente') {
+  if (req.user.role !== 'student') {
     return res.status(403).json({ error: "Student access required" });
   }
   next();
@@ -120,9 +118,10 @@ app.get("/api/sessions/current", (req, res) => {
     username: req.user.username,
     name: req.user.name,
     surname: req.user.surname,
-    role: req.user.role    
+    role: req.user.role,
+    avatar: req.user.avatar    
   };
-  res.json(userInfo);
+  res.json(userInfo);a
 });
 
 app.delete("/api/sessions/current", (req, res) =>
@@ -144,9 +143,7 @@ app.get("/api/students", isTeacher, async (req, res) => {
   }
 });
 
-app.post(
-  "/api/tasks/teacher",
-  isTeacher,
+app.post("/api/tasks/teacher", isTeacher,
   [
     body("question").isLength({ min: 1 }),
     body("studentIds").isArray({ min: 2, max: 6 }),
@@ -205,9 +202,7 @@ app.get("/api/tasks/teacher/:id", isTeacher, async (req, res) => {
   }
 });
 
-app.put(
-  "/api/tasks/teacher/:id/score",
-  isTeacher,
+app.put("/api/tasks/teacher/:id/score", isTeacher,
   [
     body("score").isFloat({ min: 0, max: 30 })
   ],
@@ -261,6 +256,7 @@ app.get("/api/tasks/student/open", isStudent, async (req, res) => {
   }
 });
 
+//FIXME: fix the wight and the theacher name
 app.get("/api/tasks/student/closed", isStudent, async (req, res) => {
   try {
     const tasks = await getClosedTasksByStudent(req.user.id);
@@ -270,9 +266,7 @@ app.get("/api/tasks/student/closed", isStudent, async (req, res) => {
   }
 });
 
-app.put(
-  "/api/tasks/student/:id/answer",
-  isStudent,
+app.put("/api/tasks/student/:id/answer", isStudent,
   [
     body("answer").isLength({ min: 1 })
   ],
@@ -304,53 +298,6 @@ app.put(
     }
   }
 );
-
-app.get("/api/tasks/student/:id/details", isStudent, async (req, res) => {
-  try {
-    const taskId = req.params.id;
-    const studentId = req.user.id;
-    
-    const task = await getTaskById(taskId);
-    if (!task) {
-      return res.status(404).json({ error: "task not found" });
-    }
-
-    const isStudentInGroup = task.students.some(s => s.id === studentId);
-    if (!isStudentInGroup) {
-      return res.status(403).json({ error: "You are not part of this task group" });
-    }
-
-    const studentView = {
-      id: task.id,
-      question: task.question,
-      answer: task.answer,
-      status: task.status,
-      students: task.students,
-      score: task.status === 'closed' ? task.score : null
-    };
-
-    res.json(studentView);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/* --- SHARED ROUTES --- */
-
-app.get("/api/profile", isLoggedIn, async (req, res) => {
-  try {
-    const userInfo = {
-      id: req.user.id,
-      username: req.user.username,
-      name: req.user.name,
-      surname: req.user.surname,
-      role: req.user.role
-      };
-    res.json(userInfo);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 app.use("/images/avatars", express.static("data/images/avatars"));
 

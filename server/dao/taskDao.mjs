@@ -46,34 +46,67 @@ export const createTask = (teacherId, question, studentIds) => {
 // Get all tasks by teacher
 export const getTasksByTeacher = (teacherId) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT a.*, 
-             COUNT(tk.student_id) as student_count,
-             GROUP_CONCAT(u.name || ' ' || u.surname, ', ') as student_names
+    const sqlTasks = `
+      SELECT DISTINCT a.*
       FROM tasks a
-      JOIN task_students tk ON a.id = tk.task_id
-      JOIN users u ON tk.student_id = u.id
       WHERE a.teacher_id = ?
-      GROUP BY a.id
       ORDER BY a.created_at DESC
     `;
     
-    db.all(sql, [teacherId], (err, rows) => {
-      if (err)
+    db.all(sqlTasks, [teacherId], (err, taskRows) => {
+      if (err) {
         reject(err);
-      else {
-        const tasks = rows.map(row => ({
-          id: row.id,
-          question: row.question,
-          status: row.status,
-          answer: row.answer,
-          score: row.score,
-          createdAt: row.created_at,
-          studentCount: row.student_count,
-          studentNames: row.student_names
-        }));
-        resolve(tasks);
+        return;
       }
+
+      if (taskRows.length === 0) {
+        resolve([]);
+        return;
+      }
+
+      const taskIds = taskRows.map(task => task.id);
+      const placeholders = taskIds.map(() => '?').join(',');
+      
+      const sqlStudents = `
+        SELECT tk.task_id, u.id, u.name, u.surname, u.username, u.avatar
+        FROM task_students tk
+        JOIN users u ON tk.student_id = u.id
+        WHERE tk.task_id IN (${placeholders})
+        ORDER BY tk.task_id, u.name, u.surname
+      `;
+
+      db.all(sqlStudents, taskIds, (err, studentRows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const studentsByTask = {};
+        studentRows.forEach(student => {
+          if (!studentsByTask[student.task_id]) {
+            studentsByTask[student.task_id] = [];
+          }
+          studentsByTask[student.task_id].push({
+            id: student.id,
+            name: student.name,
+            surname: student.surname,
+            username: student.username,
+            avatar: student.avatar
+          });
+        });
+
+        const tasks = taskRows.map(task => ({
+          id: task.id,
+          question: task.question,
+          status: task.status,
+          answer: task.answer,
+          score: task.score,
+          date: task.created_at,
+          students: studentsByTask[task.id] || []
+        }));
+
+        resolve(tasks);
+      });
     });
   });
 };
@@ -173,7 +206,7 @@ export const updateTaskAnswer = (taskId, answer) => {
 export const getOpenTasksByStudent = (studentId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT a.*, u_teacher.name as teacher_name,
+      SELECT a.*, u_teacher.name as teacher_name, u_teacher.surname as teacher_surname,
              COUNT(tk2.student_id) as student_count,
              GROUP_CONCAT(u_students.name || ' ' || u_students.surname, ', ') as student_names
       FROM tasks a
@@ -196,6 +229,7 @@ export const getOpenTasksByStudent = (studentId) => {
           answer: row.answer,
           createdAt: row.created_at,
           teacherName: row.teacher_name,
+          teacherSurname: row.teacher_surname,
           studentCount: row.student_count,
           studentNames: row.student_names
         }));
@@ -205,16 +239,20 @@ export const getOpenTasksByStudent = (studentId) => {
   });
 };
 
+//FIXME: undersand if created_at is needed in the response
+
 // Get closed tasks for a student with scores
 export const getClosedTasksByStudent = (studentId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT a.*, u_teacher.name as teacher_name,
-             COUNT(tk2.student_id) as group_size
+      SELECT a.*, u_teacher.name as teacher_name, u_teacher.surname as teacher_surname,
+             COUNT(tk2.student_id) as group_size,
+             GROUP_CONCAT(u_students.name || ' ' || u_students.surname, ', ') as student_names
       FROM tasks a
       JOIN task_students tk ON a.id = tk.task_id
       JOIN users u_teacher ON a.teacher_id = u_teacher.id
       JOIN task_students tk2 ON a.id = tk2.task_id
+      JOIN users u_students ON tk2.student_id = u_students.id
       WHERE tk.student_id = ? AND a.status = "closed"
       GROUP BY a.id
       ORDER BY a.created_at DESC
@@ -224,64 +262,126 @@ export const getClosedTasksByStudent = (studentId) => {
       if (err)
         reject(err);
       else {
-        const tasks = rows.map(row => {
-          const weightedScore = row.score / row.group_size;
+        const tasks = rows.map(row => ({
+          id: row.id,
+          question: row.question,
+          answer: row.answer,
+          score: row.score,
+          groupSize: row.group_size,
+          createdAt: row.created_at,
+          teacherName: row.teacher_name,
+          teacherSurname: row.teacher_surname,
+          studentNames: row.student_names
+        }));
+
+        const calculateWeightedAverage = (tasks) => {
+          if (tasks.length === 0) return 0;
           
-          return {
-            id: row.id,
-            question: row.question,
-            answer: row.answer,
-            score: row.score,
-            weightedScore: weightedScore,
-            groupSize: row.group_size,
-            createdAt: row.created_at,
-            teacherName: row.teacher_name
-          };
+          const weightedSum = tasks.reduce((sum, task) => {
+            return sum + (task.score * (1.0 / task.groupSize));
+          }, 0);
+          
+          const totalWeight = tasks.reduce((sum, task) => {
+            return sum + (1.0 / task.groupSize);
+          }, 0);
+          
+          return Math.round((weightedSum / totalWeight) * 100) / 100;
+        };
+        
+        const weightedAverage = calculateWeightedAverage(tasks);
+        
+        resolve({
+          tasks,
+          weightedAverage,
         });
-        resolve(tasks);
       }
     });
   });
 };
 
-//FIXME
 // Get class overview for teacher
 export const getClassOverview = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT u.id, u.name, u.surname, u.username, u.avatar,
-             COUNT(CASE WHEN a.status = 'open' THEN 1 END) as open_tasks,
-             COUNT(CASE WHEN a.status = 'closed' THEN 1 END) as closed_tasks,
-             COUNT(a.id) as total_tasks,
-             ROUND(
-               AVG(CASE WHEN a.status = 'closed' THEN a.score END), 2
-             ) as average_score
+             a.id as task_id, a.status, a.score,
+             group_sizes.group_size
       FROM users u
       LEFT JOIN task_students tk ON u.id = tk.student_id
       LEFT JOIN tasks a ON tk.task_id = a.id AND a.teacher_id = ?
-      WHERE u.role = 'student'
-      GROUP BY u.id, u.name, u.surname, u.username, u.avatar
-      ORDER BY u.name, u.surname
+      LEFT JOIN (
+        SELECT task_id, COUNT(*) as group_size
+        FROM task_students
+        GROUP BY task_id
+      ) group_sizes ON a.id = group_sizes.task_id
+      WHERE u.role = 'student' AND a.id IS NOT NULL
+      ORDER BY u.id, a.created_at
     `;
 
     db.all(sql, [teacherId], (err, rows) => {
-      if (err)
+      if (err) {
         reject(err);
-      else {
-        const students = rows.map(row => ({
-          id: row.id,
-          name: row.name,
-          surname: row.surname,
-          username: row.username,
-          avatar: row.avatar,
-          openTasks: row.open_tasks,
-          closedTasks: row.closed_tasks,
-          totalTasks: row.total_tasks,
-          averageScore: row.average_score || 0
-        }));
-
-        resolve(students);
+        return;
       }
+
+      const studentsMap = new Map();
+
+      rows.forEach(row => {
+        if (!studentsMap.has(row.id)) {
+          studentsMap.set(row.id, {
+            id: row.id,
+            name: row.name,
+            surname: row.surname,
+            username: row.username,
+            avatar: row.avatar,
+            tasks: []
+          });
+        }
+
+        if (row.task_id) {
+          studentsMap.get(row.id).tasks.push({
+            id: row.task_id,
+            status: row.status,
+            score: row.score,
+            groupSize: row.group_size
+          });
+        }
+      });
+
+      const students = Array.from(studentsMap.values()).map(student => {
+        const openTasks = student.tasks.filter(t => t.status === 'open').length;
+        const closedTasks = student.tasks.filter(t => t.status === 'closed').length;
+        const totalTasks = student.tasks.length;
+        
+        const closedTasksWithScores = student.tasks.filter(t => t.status === 'closed' && t.score !== null);
+        let averageScore = 0;
+        
+        if (closedTasksWithScores.length > 0) {
+          const weightedSum = closedTasksWithScores.reduce((sum, task) => {
+            return sum + (task.score * (1.0 / task.groupSize));
+          }, 0);
+          
+          const totalWeight = closedTasksWithScores.reduce((sum, task) => {
+            return sum + (1.0 / task.groupSize);
+          }, 0);
+          
+          averageScore = Math.round((weightedSum / totalWeight) * 100) / 100;
+        }
+
+        return {
+          id: student.id,
+          name: student.name,
+          surname: student.surname,
+          username: student.username,
+          avatar: student.avatar,
+          openTasks,
+          closedTasks,
+          totalTasks,
+          averageScore
+        };
+      });
+
+      resolve(students);
     });
   });
 };
