@@ -25,7 +25,6 @@ const TaskTable = ({
                     {isStudent && activeTab === 'open' && <th style={{ width: '25%' }}>Gruppo</th>}
                     {isStudent && activeTab === 'closed' && <th style={{ width: '25%' }}>Risposta</th>}
                     <th style={{ width: '20%' }}>Stato</th>
-                    <th style={{ width: '15%' }}>Azioni</th>
                 </tr>
             </thead>
             <tbody>

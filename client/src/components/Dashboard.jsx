@@ -93,7 +93,7 @@ const Dashboard = (props) => {
                 <>
                   <Row>
                     <Col sm={6} className="mb-3">
-                      <Card className="h-100 border-primary">
+                      <Card className="h-100 border-primary" style={{ outline: 'none' }} tabIndex={-1}>
                         <Card.Body className="text-center">
                           <div className="display-6 text-primary mb-2">📝</div>
                           <h6>Gestione Compiti</h6>
@@ -105,7 +105,7 @@ const Dashboard = (props) => {
                       </Card>
                     </Col>
                     <Col sm={6} className="mb-3">
-                      <Card className="h-100 border-info">
+                      <Card className="h-100 border-info" style={{ outline: 'none' }} tabIndex={-1}>
                         <Card.Body className="text-center">
                           <div className="display-6 text-info mb-2">📊</div>
                           <h6>Monitoraggio Classe</h6>
@@ -120,7 +120,7 @@ const Dashboard = (props) => {
                   
                   <Row className="mt-3">
                     <Col>
-                      <Card className="border-success">
+                      <Card className="border-success" style={{ outline: 'none' }} tabIndex={-1}>
                         <Card.Body>
                           <h6 className="mb-3">📈 Media Classe</h6>
                           {loading ? (
@@ -157,7 +157,7 @@ const Dashboard = (props) => {
                 <>
                   <Row>
                     <Col className="mb-3">
-                      <Card className="h-100 border-primary">
+                      <Card className="h-100 border-primary" style={{ outline: 'none' }} tabIndex={-1}>
                         <Card.Body className="text-center">
                           <div className="display-6 text-primary mb-2">📋</div>
                           <h6>I Tuoi Compiti</h6>
@@ -172,7 +172,7 @@ const Dashboard = (props) => {
                   
                   <Row className="mt-3">
                     <Col>
-                      <Card className="border-info">
+                      <Card className="border-info" style={{ outline: 'none' }} tabIndex={-1}>
                         <Card.Body>
                           <h6 className="mb-3">⭐ La Tua Media</h6>
                           {loading ? (

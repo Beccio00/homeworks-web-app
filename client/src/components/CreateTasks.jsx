@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Badge } from 'react-bootstrap';
 import { API } from '../API/API.mjs';
+import Avatar from './Avatar';
 
 const CreateTasks = (props) => {
     const [question, setQuestion] = useState('');
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
-    const [groups, setGroups] = useState([]);
-    const [failedGroupIndices, setFailedGroupIndices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -32,35 +31,10 @@ const CreateTasks = (props) => {
         }
     };
 
-    const createGroup = () => {
-        if (selectedStudents.length < 2 || selectedStudents.length > 6) {
-            setError('Seleziona da 2 a 6 studenti per creare un gruppo');
-            return;
-        }
-
-        const newGroup = selectedStudents.map(id => 
-            students.find(student => student.id === id)
-        );
-        
-        setGroups([...groups, newGroup]);
-        setSelectedStudents([]);
-        setError('');
-    };
-
-    const removeGroup = (index) => {
-        setGroups(groups.filter((_, i) => i !== index));
-        // Aggiorna anche gli indici dei gruppi falliti
-        setFailedGroupIndices(failedGroupIndices
-            .filter(failedIndex => failedIndex !== index)
-            .map(failedIndex => failedIndex > index ? failedIndex - 1 : failedIndex)
-        );
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        setFailedGroupIndices([]);
         setLoading(true);
 
         if (!question.trim()) {
@@ -69,69 +43,24 @@ const CreateTasks = (props) => {
             return;
         }
 
-        if (groups.length === 0) {
-            setError('Crea almeno un gruppo di studenti');
+        if (selectedStudents.length < 2 || selectedStudents.length > 6) {
+            setError('Seleziona da 2 a 6 studenti per il gruppo');
             setLoading(false);
             return;
         }
 
         try {
-            const results = [];
-            const failedGroups = [];
+            await API.createTask({
+                question: question.trim(),
+                studentIds: selectedStudents
+            });
             
-            // Prova a creare ogni gruppo
-            for (let i = 0; i < groups.length; i++) {
-                const group = groups[i];
-                try {
-                    const studentIds = group.map(student => student.id);
-                    await API.createTask({
-                        question: question.trim(),
-                        studentIds: studentIds
-                    });
-                    results.push({ groupIndex: i + 1, success: true });
-                } catch (err) {
-                    // Gruppo non valido (probabilmente studenti già assegnati insieme)
-                    failedGroups.push({ 
-                        groupIndex: i + 1, 
-                        group: group,
-                        error: err.message 
-                    });
-                    results.push({ groupIndex: i + 1, success: false, error: err.message });
-                }
-            }
-            
-            // Gestisci i risultati
-            const successfulGroups = results.filter(r => r.success).length;
-            
-            if (successfulGroups > 0 && failedGroups.length === 0) {
-                // Tutti i gruppi creati con successo
-                setSuccess(`Compito creato con successo per tutti i ${successfulGroups} gruppi!`);
-                setQuestion('');
-                setGroups([]);
-                setSelectedStudents([]);
-            } else if (successfulGroups > 0 && failedGroups.length > 0) {
-                // Alcuni gruppi creati, altri falliti
-                setSuccess(`Compito creato per ${successfulGroups} gruppi.`);
-                setError(`Impossibile creare il compito per ${failedGroups.length} gruppi: alcuni studenti potrebbero essere già stati assegnati insieme in precedenza. Controlla i gruppi evidenziati.`);
-                
-                // Memorizza gli indici dei gruppi falliti per evidenziarli
-                const failedIndices = failedGroups.map(fg => fg.groupIndex - 1);
-                setFailedGroupIndices(failedIndices);
-                
-                // Rimuovi i gruppi creati con successo, mantieni quelli falliti
-                const remainingGroups = groups.filter((_, index) => 
-                    failedGroups.some(fg => fg.groupIndex === index + 1)
-                );
-                setGroups(remainingGroups);
-            } else {
-                // Nessun gruppo creato
-                setError(`Impossibile creare il compito per nessun gruppo. Motivo: alcuni studenti potrebbero essere già stati assegnati insieme in precedenza. Verifica la composizione dei gruppi.`);
-                // Evidenzia tutti i gruppi come falliti
-                setFailedGroupIndices(groups.map((_, index) => index));
-            }
+            setSuccess('Compito creato con successo!');
+            setQuestion('');
+            setSelectedStudents([]);
             
         } catch (err) {
-            setError(`Errore generale: ${err.message}`);
+            setError(`Errore nella creazione del compito: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -182,105 +111,61 @@ const CreateTasks = (props) => {
                                 <h5 className="mb-0">👥 Selezione Studenti</h5>
                             </Card.Header>
                             <Card.Body>
-                                <Row>
-                                    <Col md={8}>
-                                        <p className="mb-3">Seleziona da 2 a 6 studenti per creare un gruppo:</p>
-                                        <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="border rounded p-3">
-                                            {students.map((student) => (
-                                                <Form.Check
-                                                    key={student.id}
-                                                    type="checkbox"
-                                                    id={`student-${student.id}`}
-                                                    label={`${student.name} ${student.surname} (${student.username})`}
-                                                    checked={selectedStudents.includes(student.id)}
-                                                    onChange={(e) => handleStudentChange(student.id, e.target.checked)}
-                                                    disabled={loading}
-                                                    className="mb-2"
-                                                />
-                                            ))}
-                                        </div>
-                                        <div className="mt-2">
-                                            <small className="text-muted">
-                                                Selezionati: {selectedStudents.length} studenti
-                                            </small>
-                                        </div>
-                                    </Col>
-                                    <Col md={4}>
-                                        <Button 
-                                            variant="success" 
-                                            onClick={createGroup}
-                                            disabled={selectedStudents.length < 2 || selectedStudents.length > 6 || loading}
-                                            className="w-100"
-                                        >
-                                            ➕ Crea Gruppo
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </Card.Body>
-                        </Card>
-
-                        <Card className="mb-4">
-                            <Card.Header>
-                                <h5 className="mb-0">📋 Gruppi Creati ({groups.length})</h5>
-                            </Card.Header>
-                            <Card.Body>
-                                {groups.length === 0 ? (
-                                    <p className="text-muted">Nessun gruppo creato ancora</p>
-                                ) : (
-                                    groups.map((group, index) => {
-                                        const isFailed = failedGroupIndices.includes(index);
-                                        return (
-                                            <div 
-                                                key={index} 
-                                                className={`border rounded p-3 mb-3 ${isFailed ? 'bg-danger-subtle border-danger' : 'bg-light'}`}
-                                            >
-                                                <div className="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <h6>
-                                                            Gruppo {index + 1}
-                                                            {isFailed && (
-                                                                <Badge bg="danger" className="ms-2">
-                                                                    ⚠️ Non valido
-                                                                </Badge>
-                                                            )}
-                                                        </h6>
-                                                        <div>
-                                                            {group.map((student, studentIndex) => (
-                                                                <Badge key={student.id} bg="primary" className="me-1 mb-1">
-                                                                    {student.name} {student.surname}
-                                                                </Badge>
-                                                            ))}
-                                                        </div>
-                                                        {isFailed && (
-                                                            <small className="text-danger mt-1 d-block">
-                                                                Alcuni studenti di questo gruppo potrebbero essere già stati assegnati insieme
-                                                            </small>
-                                                        )}
-                                                    </div>
-                                                    <Button 
-                                                        variant="outline-danger" 
-                                                        size="sm"
-                                                        onClick={() => removeGroup(index)}
-                                                        disabled={loading}
-                                                    >
-                                                        ❌
-                                                    </Button>
+                                <p className="mb-3">Seleziona da 2 a 6 studenti per il gruppo:</p>
+                                <div style={{ maxHeight: '300px', overflowY: 'auto' }} className="border rounded p-3">
+                                    {students.map((student) => (
+                                        <Form.Check
+                                            key={student.id}
+                                            type="checkbox"
+                                            id={`student-${student.id}`}
+                                            checked={selectedStudents.includes(student.id)}
+                                            onChange={(e) => handleStudentChange(student.id, e.target.checked)}
+                                            disabled={loading}
+                                            className="mb-2"
+                                            label={
+                                                <div className="d-flex align-items-center">
+                                                    <Avatar {...student} size={32} />
+                                                    <span className="ms-2">
+                                                        {student.surname} {student.name} ({student.username})
+                                                    </span>
                                                 </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                                <div className="mt-3 d-flex justify-content-between align-items-center">
+                                    <small className="text-muted">
+                                        Selezionati: {selectedStudents.length} studenti
+                                        {selectedStudents.length > 0 && (
+                                            <span className={selectedStudents.length >= 2 && selectedStudents.length <= 6 ? "text-success" : "text-danger"}>
+                                                {selectedStudents.length < 2 && " (minimo 2)"}
+                                                {selectedStudents.length > 6 && " (massimo 6)"}
+                                                {selectedStudents.length >= 2 && selectedStudents.length <= 6 && " ✓"}
+                                            </span>
+                                        )}
+                                    </small>
+                                    {selectedStudents.length > 0 && (
+                                        <Button 
+                                            variant="outline-secondary" 
+                                            size="sm"
+                                            onClick={() => setSelectedStudents([])}
+                                            disabled={loading}
+                                        >
+                                            Deseleziona Tutti
+                                        </Button>
+                                    )}
+                                </div>
                             </Card.Body>
                         </Card>
 
-                        <div className="d-flex justify-content-end mb-5" >
+                        <div className="d-flex justify-content-end mb-5">
                             <Button 
                                 type="submit" 
                                 variant="primary" 
                                 size="lg"
-                                disabled={loading}
+                                disabled={loading || selectedStudents.length < 2 || selectedStudents.length > 6}
                             >
-                                {loading ? 'Creazione in corso...' : `Crea Compito per ${groups.length} Gruppo/i`}
+                                {loading ? 'Creazione in corso...' : `Crea Compito per ${selectedStudents.length} Studenti`}
                             </Button>
                         </div>
                     </Form>

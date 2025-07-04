@@ -3,7 +3,7 @@ import  db  from '../data/db.mjs';
 // Get all students
 export const getAllStudents = () => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE role = "student" ORDER BY surname, name';
+    const sql = 'SELECT id, username, name, surname, avatar, role FROM users WHERE role = "student" ORDER BY surname, name';
     db.all(sql, [], (err, rows) => {
       if (err)
         reject(err);
@@ -13,7 +13,8 @@ export const getAllStudents = () => {
           username: row.username,
           name: row.name,
           surname: row.surname,
-          avatar: row.avatar
+          avatar: row.avatar,
+          role: row.role
         }));
         resolve(students);
       }

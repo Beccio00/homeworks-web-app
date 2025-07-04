@@ -50,9 +50,9 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
     };
 
     return (
-        <div className="text-center" style={{ position: 'relative' }}>
+        <div className="text-center" style={{ position: 'relative', userSelect: 'none' }}>
             <ResponsiveContainer width={width} height={height}>
-                <PieChart>
+                <PieChart style={{ outline: 'none' }}>
                     <Pie
                         data={getGaugeData()}
                         cx="50%"
@@ -63,15 +63,21 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
                         outerRadius={80}
                         dataKey="value"
                         stroke="none"
+                        isAnimationActive={false}
+                        style={{ outline: 'none' }}
                     >
                         {getGaugeData().map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.color}
+                                style={{ outline: 'none', cursor: 'default' }}
+                            />
                         ))}
                     </Pie>
                 </PieChart>
             </ResponsiveContainer>
-            
-            <svg 
+
+                <svg 
                 style={{ 
                     position: 'absolute', 
                     top: 0, 
@@ -81,9 +87,11 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
                     height: height,
                     pointerEvents: 'none'
                 }}
-            >
+                >
                 {needle(value, getGaugeData(), cx, cy, iR, oR, '#333')}
             </svg>
+            
+
             
             <div style={{ marginTop: '-30px', fontSize: '24px', fontWeight: 'bold', color: getGaugeColor(value) }}>
                 {value.toFixed(1)}/30

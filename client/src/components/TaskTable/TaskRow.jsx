@@ -82,18 +82,6 @@ const TaskRow = ({
                 <td>
                     {getTaskStatusBadge(task)}
                 </td>
-                <td>
-                    <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleExpansion(task.id);
-                        }}
-                    >
-                        {expanded ? 'Chiudi' : 'Dettagli'}
-                    </Button>
-                </td>
             </tr>
             <tr>
                 <td colSpan={isTeacher ? "4" : "4"} className="p-0">
