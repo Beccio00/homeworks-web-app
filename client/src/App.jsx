@@ -55,11 +55,11 @@ function App() {
 
   return (
     <Routes>
-      <Route element={<DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} />}>
+      <Route element={<DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} user={user}/>}>
         <Route path="/" element={loggedIn ? <Navigate replace to='/dashboard' /> : <Navigate replace to='/login' />} />
         <Route path="/dashboard" element={loggedIn ? <Dashboard user={user} /> : <Navigate replace to='/login' />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
-        <Route path="/tasks" element={loggedIn && user?.role === 'teacher' ? <TaskManagement user={user} /> : loggedIn && user?.role === 'student' ? <TaskManagement user={user} /> : <Navigate replace to='/login' />} />
+        <Route path="/tasks" element={loggedIn? <TaskManagement user={user} /> : <Navigate replace to='/login' />} />
         <Route path="/tasks/new" element={loggedIn && user?.role === 'teacher' ? <CreateTasks user={user} /> : <Navigate replace to='/login' />} />
         <Route path="/progress" element={loggedIn && user?.role === 'teacher' ? <TaskDatails user={user} /> : <Navigate replace to='/login' />} />
         
