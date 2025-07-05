@@ -1,14 +1,18 @@
 import { Alert, Container, Row } from "react-bootstrap";
 import { Outlet } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../contexts/AuthContext";
 import NavHeader from "./NavHeader";
 
-function DefaultLayout(props) {
+function DefaultLayout() {
+  const { message, setMessage } = useContext(AuthContext);
+  
   return(
     <>
-      <NavHeader loggedIn={props.loggedIn} handleLogout={props.handleLogout} user={props.user} />
+      <NavHeader />
       <Container fluid className="mt-3">
-        {props.message && <Row>
-          <Alert variant={props.message.type} onClose={() => props.setMessage('')} dismissible>{props.message.msg}</Alert>
+        {message && <Row>
+          <Alert variant={message.type} onClose={() => setMessage('')} dismissible>{message.msg}</Alert>
         </Row>}
         <Outlet />
       </Container>

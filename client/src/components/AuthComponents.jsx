@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Form, Button, Card, Container, Row, Col } from 'react-bootstrap';
+import { AuthContext } from '../contexts/AuthContext';
 
-export function LoginForm({ handleLogin }) {
+export function LoginForm() {
+  const { handleLogin } = useContext(AuthContext);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

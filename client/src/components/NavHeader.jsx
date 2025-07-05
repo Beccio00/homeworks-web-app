@@ -1,9 +1,13 @@
 import { Navbar, Nav, Button, Container, Dropdown } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useContext } from 'react';
+import { AuthContext } from '../contexts/AuthContext';
 import Avatar from './Avatar';
 
-function NavHeader(props) {
-  if (!props.loggedIn) {
+function NavHeader() {
+  const { loggedIn, user, handleLogout } = useContext(AuthContext);
+  
+  if (!loggedIn) {
     return null;
   }
 
@@ -28,11 +32,11 @@ function NavHeader(props) {
               className="d-flex align-items-center" 
               style={{ cursor: 'pointer', border: 'none', background: 'none' }}
             >
-              <Avatar {...props.user} size={40} />
+              <Avatar {...user} size={40} />
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
-              <Dropdown.Item onClick={props.handleLogout} className="text-danger">
+              <Dropdown.Item onClick={handleLogout} className="text-danger">
                 🚪 Logout
               </Dropdown.Item>
             </Dropdown.Menu>

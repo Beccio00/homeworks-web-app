@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Badge } from 'react-bootstrap';
+import { useState, useEffect, useContext } from 'react';
+import { Container, Row, Col, Card, Form, Button, Alert, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import { API } from '../API/API.mjs';
 import Avatar from './Avatar';
 
-const CreateTasks = (props) => {
+const CreateTasks = () => {
+    const { user } = useContext(AuthContext);
     const [question, setQuestion] = useState('');
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
@@ -69,10 +72,22 @@ const CreateTasks = (props) => {
         <Container className="mt-4">
             <Row>
                 <Col>
-                    <h2>Crea Nuovi Compiti</h2>
-                    <p className="text-muted mb-4">
-                        Benvenuto, {props.user.name}! Qui puoi creare e gestire i compiti per i tuoi studenti.
-                    </p>
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2>Crea Nuovi Compiti</h2>
+                            <p className="text-muted mb-0">
+                                Benvenuto, {user.name}! Qui puoi creare e gestire i compiti per i tuoi studenti.
+                            </p>
+                        </div>
+                        <Button 
+                            as={Link} 
+                            to="/tasks" 
+                            variant="outline-primary"
+                            className="d-flex align-items-center"
+                        >
+                            Torna a Gestisci Compiti
+                        </Button>
+                    </div>
 
                     {error && (
                         <Alert variant="danger" dismissible onClose={() => setError('')}>
@@ -135,14 +150,13 @@ const CreateTasks = (props) => {
                                 </div>
                                 <div className="mt-3 d-flex justify-content-between align-items-center">
                                     <small className="text-muted">
-                                        Selezionati: {selectedStudents.length} studenti
-                                        {selectedStudents.length > 0 && (
-                                            <span className={selectedStudents.length >= 2 && selectedStudents.length <= 6 ? "text-success" : "text-danger"}>
-                                                {selectedStudents.length < 2 && " (minimo 2)"}
-                                                {selectedStudents.length > 6 && " (massimo 6)"}
-                                                {selectedStudents.length >= 2 && selectedStudents.length <= 6 && " ✓"}
-                                            </span>
-                                        )}
+                                        Selezionati: {selectedStudents.length} studenti  
+                                        <span className={selectedStudents.length >= 2 && selectedStudents.length <= 6 ? "text-success" : "text-danger"}>
+                                            {selectedStudents.length < 2 && " (minimo 2)"}
+                                            {selectedStudents.length > 6 && " (massimo 6)"}
+                                            {selectedStudents.length >= 2 && selectedStudents.length <= 6 && " ✓"}
+                                        </span>
+                                    
                                     </small>
                                     {selectedStudents.length > 0 && (
                                         <Button 
@@ -159,14 +173,33 @@ const CreateTasks = (props) => {
                         </Card>
 
                         <div className="d-flex justify-content-end mb-5">
-                            <Button 
-                                type="submit" 
-                                variant="primary" 
-                                size="lg"
-                                disabled={loading || selectedStudents.length < 2 || selectedStudents.length > 6}
+                            <OverlayTrigger
+                                placement="top"
+                                show={loading || selectedStudents.length < 2 || selectedStudents.length > 6 ? undefined : false}
+                                overlay={
+                                    <Tooltip id="button-tooltip">
+                                        {loading 
+                                            ? 'Attendere, creazione in corso...' 
+                                            : selectedStudents.length < 2 
+                                                ? 'Seleziona almeno 2 studenti' 
+                                                : selectedStudents.length > 6 
+                                                    ? 'Seleziona massimo 6 studenti'
+                                                    : ''
+                                        }
+                                    </Tooltip>
+                                }
                             >
-                                {loading ? 'Creazione in corso...' : `Crea Compito per ${selectedStudents.length} Studenti`}
-                            </Button>
+                                <span>
+                                    <Button 
+                                        type="submit" 
+                                        variant="primary" 
+                                        size="lg"
+                                        disabled={loading || selectedStudents.length < 2 || selectedStudents.length > 6}
+                                    >
+                                        {loading ? 'Creazione in corso...' : `Crea Compito il gruppo di studenti selezionati`}
+                                    </Button>
+                                </span>
+                            </OverlayTrigger>
                         </div>
                     </Form>
                 </Col>

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import { API } from '../API/API.mjs';
 import { TaskTable, TaskHeader } from './TaskTable';
 
-const TaskManagement = (props) => {
+const TaskManagement = () => {
+    const { user } = useContext(AuthContext);
     const [tasks, setTasks] = useState([]);
     const [closedTasks, setClosedTasks] = useState([]);
     const [weightedAverage, setWeightedAverage] = useState(0);
@@ -16,15 +18,15 @@ const TaskManagement = (props) => {
     const [editingAnswer, setEditingAnswer] = useState(null);
     const [activeTab, setActiveTab] = useState('open');
 
-    const isTeacher = props.user.role === 'teacher';
-    const isStudent = props.user.role === 'student';
+    const isTeacher = user.role === 'teacher';
+    const isStudent = user.role === 'student';
 
     useEffect(() => {
         fetchTasks();
         if (isStudent) {
             fetchClosedTasks();
         }
-    }, [props.user.role]);
+    }, [user.role]);
 
     const fetchTasks = async () => {
         try {

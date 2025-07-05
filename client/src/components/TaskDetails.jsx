@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Alert, Button, ButtonGroup } from 'react-bootstrap';
+import { AuthContext } from '../contexts/AuthContext';
 import { API } from '../API/API.mjs';
 import Avatar from './Avatar';
 
-const TaskDetails = (props) => {
+const TaskDetails = () => {
+    const { user } = useContext(AuthContext);
     const [students, setStudents] = useState([]);
     const [totalStats, setTotalStats] = useState({ totalOpenTasks: 0, totalClosedTasks: 0, totalTasks: 0 });
     const [loading, setLoading] = useState(true);
@@ -12,10 +14,10 @@ const TaskDetails = (props) => {
     const [sortOrder, setSortOrder] = useState('asc');
 
     useEffect(() => {
-        if (props.user.role === 'teacher') {
+        if (user.role === 'teacher') {
             fetchClassOverview();
         }
-    }, [props.user.role]);
+    }, [user.role]);
 
     const fetchClassOverview = async () => {
         try {
@@ -108,7 +110,7 @@ const TaskDetails = (props) => {
                             <h5 className="mb-0">📊 Riepilogo Studenti</h5>
                         </Card.Header>
                         <Card.Body>
-                            {props.user.role === 'teacher' ? (
+                            {user.role === 'teacher' ? (
                                 <>
                                     {loading ? (
                                         <div className="text-center">
@@ -195,7 +197,7 @@ const TaskDetails = (props) => {
                                                                     <Avatar {...student} size={40} />
                                                                     <div>
                                                                         <div className="fw-medium">
-                                                                            {student.name} {student.surname}
+                                                                            {student.surname} {student.name}
                                                                         </div>
                                                                         <small className="text-muted">
                                                                             {student.username}

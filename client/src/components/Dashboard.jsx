@@ -1,22 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import { API } from '../API/API.mjs';
 import Avatar from './Avatar';
 import GaugeChart from './GaugeChart';
 
-const Dashboard = (props) => {
+const Dashboard = () => {
+    const { user } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [studentAverage, setStudentAverage] = useState(0);
     const [totalStudents, setTotalStudents] = useState(0);
 
     useEffect(() => {
-        if (props.user.role === 'teacher') {
+        if (user.role === 'teacher') {
             fetchTeacherStats();
-        } else if (props.user.role === 'student') {
+        } else if (user.role === 'student') {
             fetchStudentStats();
         }
-    }, [props.user.role]);
+    }, [user.role]);
 
     const fetchTeacherStats = async () => {
         try {
@@ -67,13 +69,13 @@ const Dashboard = (props) => {
             </Card.Header>
             <Card.Body className="text-center">
               <div className="mb-3">
-                <Avatar {...props.user} size={170} />
+                <Avatar {...user} size={170} />
               </div>
-              <h4 className="mb-1">{props.user.name} {props.user.surname}</h4>
-              <p className="text-muted mb-2">{props.user.role === 'teacher' ? 'Codice insegnante: ' : 'Matricola: '}{props.user.username}</p>
+              <h4 className="mb-1">{user.name} {user.surname}</h4>
+              <p className="text-muted mb-2">{user.role === 'teacher' ? 'Codice insegnante: ' : 'Matricola: '}{user.username}</p>
               <div className="bg-light rounded p-2 mb-3">
                 <span>
-                  {props.user.role === 'teacher' ? '🎓 Insegnante' : '📚 Studente'}
+                  {user.role === 'teacher' ? '🎓 Insegnante' : '📚 Studente'}
                 </span>
               </div>
 
@@ -85,11 +87,11 @@ const Dashboard = (props) => {
           <Card className="h-100">
             <Card.Header>
               <h5 className="mb-0">
-                {props.user.role === 'teacher' ? '🏫 Dashboard Insegnante' : '📖 Dashboard Studente'}
+                {user.role === 'teacher' ? '🏫 Dashboard Insegnante' : '📖 Dashboard Studente'}
               </h5>
             </Card.Header>
             <Card.Body>
-              {props.user.role === 'teacher' ? (
+              {user.role === 'teacher' ? (
                 <>
                   <Row>
                     <Col sm={6} className="mb-3">
