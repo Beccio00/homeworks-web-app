@@ -64,15 +64,6 @@ API.getTeacherTasks = async () => {
   throw new Error(await response.text());
 };
 
-API.getTaskById = async (taskId) => {
-  const response = await fetch(`${SERVER_URL}/tasks/teacher/${taskId}`, {
-    credentials: "include",
-  });
-
-  if (response.ok) return await response.json();
-  throw new Error(await response.text());
-};
-
 API.scoreTask = async (taskId, score) => {
   const response = await fetch(`${SERVER_URL}/tasks/teacher/${taskId}/score`, {
     method: "PUT",

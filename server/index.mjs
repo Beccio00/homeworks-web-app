@@ -10,7 +10,6 @@ import passport from "passport";
 import {
   createTask,
   getTasksByTeacher,
-  getTaskById,
   updateTaskScore,
   closeTask,
   getAllTasksByStudent,
@@ -182,21 +181,6 @@ app.get("/api/tasks/teacher", isTeacher, async (req, res) => {
   try {
     const tasks = await getTasksByTeacher(req.user.id);
     res.json(tasks);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/tasks/teacher/:id", isTeacher, async (req, res) => {
-  try {
-    const taskId = req.params.id;
-    const task = await getTaskById(taskId, req.user.id);
-    
-    if (!task) {
-      return res.status(404).json({ error: "task not found" });
-    }
-
-    res.json(task);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

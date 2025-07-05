@@ -112,58 +112,6 @@ export const getTasksByTeacher = (teacherId) => {
   });
 };
 
-// Get task by ID with full details
-export const getTaskById = (taskId, teacherId = null) => {
-  return new Promise((resolve, reject) => {
-    let sql = `
-      SELECT a.*, u_teacher.name as teacher_name
-      FROM tasks a
-      JOIN users u_teacher ON a.teacher_id = u_teacher.id
-      WHERE a.id = ?
-    `;
-    let params = [taskId];
-
-    if (teacherId) {
-      sql += ' AND a.teacher_id = ?';
-      params.push(teacherId);
-    }
-
-    db.get(sql, params, (err, row) => {
-      if (err)
-        reject(err);
-      else if (row === undefined)
-        resolve(null);
-      else {
-        const sqlStudents = `
-          SELECT u.id, u.username, u.name, u.surname, u.avatar
-          FROM users u
-          JOIN task_students tk ON u.id = tk.student_id
-          WHERE tk.task_id = ?
-        `;
-        
-        db.all(sqlStudents, [taskId], (err, students) => {
-          if (err)
-            reject(err);
-          else {
-            const task = {
-              id: row.id,
-              question: row.question,
-              answer: row.answer,
-              score: row.score,
-              status: row.status,
-              createdAt: row.created_at,
-              teacherId: row.teacher_id,
-              teacherName: row.teacher_name,
-              students: students
-            };
-            resolve(task);
-          }
-        });
-      }
-    });
-  });
-};
-
 // Update task score and close it
 export const updateTaskScore = (taskId, score) => {
   return new Promise((resolve, reject) => {
