@@ -13,8 +13,7 @@ import {
   getTaskById,
   updateTaskScore,
   closeTask,
-  getOpenTasksByStudent,
-  getClosedTasksByStudent,
+  getAllTasksByStudent,
   updateTaskAnswer,
   getClassOverview
 } from "./dao/taskDao.mjs";
@@ -248,20 +247,10 @@ app.get("/api/class-overview", isTeacher, async (req, res) => {
 
 /* --- STUDENT ROUTES --- */
 
-app.get("/api/tasks/student/open", isStudent, async (req, res) => {
+app.get("/api/tasks/student", isStudent, async (req, res) => {
   try {
-    const tasks = await getOpenTasksByStudent(req.user.id);
-    res.json(tasks);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-//FIXME: fix the wight and the theacher name
-app.get("/api/tasks/student/closed", isStudent, async (req, res) => {
-  try {
-    const tasks = await getClosedTasksByStudent(req.user.id);
-    res.json(tasks);
+    const result = await getAllTasksByStudent(req.user.id);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

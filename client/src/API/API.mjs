@@ -95,17 +95,8 @@ API.getClassOverview = async () => {
 };
 
 /* --- STUDENT ENDPOINTS --- */
-API.getOpenTasks = async () => {
-  const response = await fetch(`${SERVER_URL}/tasks/student/open`, {
-    credentials: "include",
-  });
-
-  if (response.ok) return await response.json();
-  throw new Error(await response.text());
-};
-
-API.getClosedTasks = async () => {
-  const response = await fetch(`${SERVER_URL}/tasks/student/closed`, {
+API.getAllTasks = async () => {
+  const response = await fetch(`${SERVER_URL}/tasks/student`, {
     credentials: "include",
   });
 

@@ -41,9 +41,10 @@ const Dashboard = () => {
     const fetchStudentStats = async () => {
         try {
             setLoading(true);
-            const data = await API.getClosedTasks();
+            const data = await API.getAllTasks();
             setStudentAverage(data.weightedAverage || 0);
-            setTotalStudents(data.tasks?.length || 0);
+            const closedTasks = data.tasks?.filter(task => task.status === 'closed') || [];
+            setTotalStudents(closedTasks.length);
         } catch (err) {
             console.error('Errore nel caricamento statistiche studente:', err);
         } finally {

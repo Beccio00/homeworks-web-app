@@ -7,8 +7,7 @@ import { TaskTable, TaskHeader } from './TaskTable';
 
 const TaskManagement = () => {
     const { user } = useContext(AuthContext);
-    const [tasks, setTasks] = useState([]);
-    const [closedTasks, setClosedTasks] = useState([]);
+    const [allTasks, setAllTasks] = useState([]);
     const [weightedAverage, setWeightedAverage] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -23,9 +22,6 @@ const TaskManagement = () => {
 
     useEffect(() => {
         fetchTasks();
-        if (isStudent) {
-            fetchClosedTasks();
-        }
     }, [user.role]);
 
     const fetchTasks = async () => {
@@ -35,25 +31,16 @@ const TaskManagement = () => {
             
             if (isTeacher) {
                 tasksData = await API.getTeacherTasks();
+                setAllTasks(tasksData || []);
             } else if (isStudent) {
-                tasksData = await API.getOpenTasks();
+                const data = await API.getAllTasks();
+                setAllTasks(data.tasks || []);
+                setWeightedAverage(data.weightedAverage || 0);
             }
-            
-            setTasks(tasksData || []);
         } catch (err) {
             setError('Errore nel caricamento dei compiti: ' + err.message);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchClosedTasks = async () => {
-        try {
-            const data = await API.getClosedTasks();
-            setClosedTasks(data.tasks || []);
-            setWeightedAverage(data.weightedAverage || 0);
-        } catch (err) {
-            setError('Errore nel caricamento dei compiti chiusi: ' + err.message);
         }
     };
 
@@ -113,8 +100,10 @@ const TaskManagement = () => {
     };
 
     const getCurrentTasks = () => {
-        if (isTeacher) return tasks;
-        return activeTab === 'open' ? tasks : closedTasks;
+        if (isTeacher) return allTasks;
+        return activeTab === 'open' ? 
+            allTasks.filter(task => task.status === 'open') : 
+            allTasks.filter(task => task.status === 'closed');
     };
 
     const getCurrentTasksTitle = () => {
