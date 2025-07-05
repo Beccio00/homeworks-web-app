@@ -6,12 +6,11 @@ import { API } from '../API/API.mjs';
 import { TaskTable, TaskHeader } from './TaskTable';
 
 const TaskManagement = () => {
-    const { user } = useContext(AuthContext);
+    const { user, setMessage } = useContext(AuthContext);
     const [allTasks, setAllTasks] = useState([]);
     const [weightedAverage, setWeightedAverage] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [expandedRows, setExpandedRows] = useState(new Set());
     const [scoringTask, setScoringTask] = useState(null);
     const [editingAnswer, setEditingAnswer] = useState(null);
@@ -63,7 +62,7 @@ const TaskManagement = () => {
         try {
             setScoringTask(taskId);
             await API.scoreTask(taskId, parseInt(scoreValue));
-            setSuccess('Punteggio assegnato con successo!');
+            setMessage({ msg: 'Punteggio assegnato con successo!', type: 'success' });
             fetchTasks();
         } catch (err) {
             setError('Errore nell\'assegnazione del punteggio: ' + err.message);
@@ -81,7 +80,7 @@ const TaskManagement = () => {
         try {
             setEditingAnswer(taskId);
             await API.submitAnswer(taskId, answerValue.trim());
-            setSuccess('Risposta salvata con successo!');
+            setMessage({ msg: 'Risposta salvata con successo!', type: 'success' });
             setEditingAnswer(null);
             await fetchTasks(); 
         } catch (err) {
@@ -121,34 +120,27 @@ const TaskManagement = () => {
 
 
     const getTaskStatusBadge = (task) => {
-        // Per i compiti chiusi (tab "closed") mostra sempre il punteggio se presente
         if (activeTab === 'closed' && task.score !== null) {
             return <Badge bg="success">Valutato ({task.score}/30)</Badge>;
         }
         
-        // Per i compiti aperti dello studente
         if (isStudent && activeTab === 'open') {
             if (task.answer) {
-                return <Badge bg="warning">In attesa di valutazione</Badge>;
+                return <Badge bg="warning">In attesa di valutazione (modificabile)</Badge>;
             } else {
                 return <Badge bg="secondary">Senza risposta</Badge>;
             }
         }
         
-        // Per gli insegnanti (logica originale)
         if (isTeacher) {
-            if (task.score !== null) {
-                return <Badge bg="success">Valutato ({task.score}/30)</Badge>;
-            } else if (task.answer) {
+            if (task.answer) {
                 return <Badge bg="warning">Da valutare</Badge>;
             } else {
-                return <Badge bg="secondary">In attesa</Badge>;
+                return <Badge bg="secondary">In attesa di una risposta</Badge>;
             }
         }
-        
-        // Fallback
-        return <Badge bg="secondary">In attesa</Badge>;
     };
+
     return (
         <Container className="mt-4">
             <Row>
@@ -179,12 +171,6 @@ const TaskManagement = () => {
                     {error && (
                         <Alert variant="danger" dismissible onClose={() => setError('')}>
                             {error}
-                        </Alert>
-                    )}
-
-                    {success && (
-                        <Alert variant="success" dismissible onClose={() => setSuccess('')}>
-                            {success}
                         </Alert>
                     )}
 

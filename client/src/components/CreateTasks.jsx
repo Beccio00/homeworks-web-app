@@ -6,13 +6,12 @@ import { API } from '../API/API.mjs';
 import Avatar from './Avatar';
 
 const CreateTasks = () => {
-    const { user } = useContext(AuthContext);
+    const { user, setMessage } = useContext(AuthContext);
     const [question, setQuestion] = useState('');
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -37,7 +36,6 @@ const CreateTasks = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setSuccess('');
         setLoading(true);
 
         if (!question.trim()) {
@@ -58,7 +56,7 @@ const CreateTasks = () => {
                 studentIds: selectedStudents
             });
             
-            setSuccess('Compito creato con successo!');
+            setMessage({ msg: 'Compito creato con successo!', type: 'success' });
             setQuestion('');
             setSelectedStudents([]);
             
@@ -92,12 +90,6 @@ const CreateTasks = () => {
                     {error && (
                         <Alert variant="danger" dismissible onClose={() => setError('')}>
                             {error}
-                        </Alert>
-                    )}
-
-                    {success && (
-                        <Alert variant="success" dismissible onClose={() => setSuccess('')}>
-                            {success}
                         </Alert>
                     )}
 

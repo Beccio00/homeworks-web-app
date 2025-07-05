@@ -102,7 +102,7 @@ export const getTasksByTeacher = (teacherId) => {
           status: task.status,
           answer: task.answer,
           score: task.score,
-          date: task.created_at,
+          createdAt: task.created_at,
           students: studentsByTask[task.id] || []
         }));
 

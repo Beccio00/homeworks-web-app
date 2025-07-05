@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Badge, Collapse } from 'react-bootstrap';
+import dayjs from 'dayjs';
 import Avatar from '../Avatar';
 import TaskDetails from './TaskDetails';
 
@@ -18,6 +19,7 @@ const TaskRow = ({
     onStartEditingAnswer,
     onCancelEditingAnswer
 }) => {
+    console.log(task)
     return (
         <>
             <tr 
@@ -35,7 +37,7 @@ const TaskRow = ({
                                 }
                             </div>
                             <small className="text-muted">
-                                ID: {task.id} • Creato: {new Date(task.date || task.createdAt).toLocaleDateString('it-IT')}
+                                Creato il: {dayjs(task.createdAt).format('DD/MM/YYYY')}
                             </small>
                         </div>
                     </div>

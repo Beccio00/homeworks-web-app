@@ -2,6 +2,43 @@ import { useState } from 'react';
 import { Row, Col, Form, Button, Badge } from 'react-bootstrap';
 import Avatar from '../Avatar';
 
+const UserInfo = ({ user, size = 28, showUsername = true }) => (
+    <div className="d-flex align-items-center mb-2">
+        <Avatar {...user} size={size} />
+        <div className="ms-1">
+            <span className="small fw-medium">
+                {user.name} {user.surname}
+            </span>
+            {showUsername && (
+                <>
+                    <br />
+                    <small className="text-muted">
+                        {user.username}
+                    </small>
+                </>
+            )}
+        </div>
+    </div>
+);
+
+const GroupInfo = ({ students, title = "👥 Gruppo:" }) => (
+    <div className="mb-3">
+        <h6>{title}</h6>
+        {students && students.map((student, index) => (
+            <UserInfo key={student.id || index} user={student} />
+        ))}
+    </div>
+);
+
+const ScoreDisplay = ({ score, title = "⭐ Punteggio:" }) => (
+    <div className="mt-3">
+        <h6>{title}</h6>
+        <Badge bg="success" className="fs-6 p-2">
+            {score}/30
+        </Badge>
+    </div>
+);
+
 const TaskDetails = ({ 
     task, 
     isTeacher, 
@@ -75,7 +112,7 @@ const TaskDetails = ({
                         ) : (
                             <p className="text-muted fst-italic">Nessuna risposta fornita ancora</p>
                         )}
-                        {isStudent && (
+                        {isStudent && task.status === 'open' && (
                             <Button
                                 variant="outline-primary"
                                 size="sm"
@@ -88,101 +125,45 @@ const TaskDetails = ({
                 )}
             </Col>
             <Col md={4}>
-                {isTeacher && (
-                    <>
-                        <h6>👥 Partecipanti:</h6>
-                        <div className="mb-3">
-                            {task.students && task.students.map((student) => (
-                                <div key={student.id} className="d-flex align-items-center mb-2">
-                                    <Avatar {...student} size={28} />
-                                    <div className="ms-1">
-                                        <span className="small fw-medium">
-                                            {student.name} {student.surname}
-                                        </span>
-                                        <br />
-                                        <small className="text-muted">
-                                            {student.username}
-                                        </small>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {task.answer && task.score === null && (
-                            <div className="mt-3">
-                                <h6>⭐ Assegna Punteggio:</h6>
-                                <Form.Group className="mb-2">
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="Punteggio (0-30)"
-                                        value={scoreValue}
-                                        onChange={(e) => setScoreValue(e.target.value)}
-                                        min="0"
-                                        max="30"
-                                        disabled={scoringTask === task.id}
-                                    />
-                                </Form.Group>
-                                <Button
-                                    variant="success"
-                                    size="sm"
-                                    onClick={handleScoreSubmit}
-                                    disabled={scoringTask === task.id || !scoreValue.trim()}
-                                >
-                                    {scoringTask === task.id ? 'Assegnazione...' : 'Assegna Punteggio'}
-                                </Button>
-                            </div>
-                        )}
-
-                        {task.score !== null && (
-                            <div className="mt-3">
-                                <h6>✅ Punteggio Assegnato:</h6>
-                                <Badge bg="success" className="fs-6 p-2">
-                                    {task.score}/30
-                                </Badge>
-                            </div>
-                        )}
-                    </>
+                <GroupInfo students={task.students} />
+                
+                {isStudent && task.teacher && (
+                    <div className="mb-3">
+                        <h6>👨‍🏫 Insegnante:</h6>
+                        <UserInfo user={task.teacher} size={32} />
+                    </div>
                 )}
                 
-                {isStudent && (
-                    <div>
-                        <h6>👨‍🏫 Insegnante:</h6>
-                        <div className="d-flex align-items-center mb-2">
-                            <Avatar {...task.teacher} size={32} />
-                            <div className="ms-2">
-                                <span className="fw-medium">{task.teacher?.name} {task.teacher?.surname}</span>
-                                <br />
-                                <small className="text-muted">{task.teacher?.username}</small>
-                            </div>
-                        </div>
-                        
-                        <h6>👥 Gruppo:</h6>
-                        <div className="mb-3">
-                            {task.students && task.students.map((student, index) => (
-                                <div key={index} className="d-flex align-items-center mb-2">
-                                    <Avatar {...student} size={28} />
-                                    <div className="ms-1">
-                                        <span className="small fw-medium">
-                                            {student.name} {student.surname}
-                                        </span>
-                                        <br />
-                                        <small className="text-muted">
-                                            {student.username}
-                                        </small>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        
-                        {task.score !== null && (
-                            <div className="mt-3">
-                                <h6>⭐ Punteggio:</h6>
-                                <Badge bg="success" className="fs-6 p-2">
-                                    {task.score}/30
-                                </Badge>
-                            </div>
-                        )}
+                {isTeacher && task.answer && task.score === null && (
+                    <div className="mt-3">
+                        <h6>⭐ Assegna Punteggio:</h6>
+                        <Form.Group className="mb-2">
+                            <Form.Control
+                                type="number"
+                                placeholder="Punteggio (0-30)"
+                                value={scoreValue}
+                                onChange={(e) => setScoreValue(e.target.value)}
+                                min="0"
+                                max="30"
+                                disabled={scoringTask === task.id}
+                            />
+                        </Form.Group>
+                        <Button
+                            variant="success"
+                            size="sm"
+                            onClick={handleScoreSubmit}
+                            disabled={scoringTask === task.id || !scoreValue.trim()}
+                        >
+                            {scoringTask === task.id ? 'Assegnazione...' : 'Assegna Punteggio'}
+                        </Button>
                     </div>
+                )}
+
+                {task.score !== null && (
+                    <ScoreDisplay 
+                        score={task.score} 
+                        title={isTeacher ? "✅ Punteggio Assegnato:" : "⭐ Punteggio:"} 
+                    />
                 )}
             </Col>
         </Row>

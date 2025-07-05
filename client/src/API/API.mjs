@@ -12,7 +12,11 @@ API.login = async (credentials) => {
   });
 
   if (response.ok) return await response.json();
-  throw new Error(await response.text());
+  
+  const errorText = await response.text();
+  const error = new Error(errorText);
+  error.status = response.status;
+  throw error;
 };
 
 API.getUserInfo = async () => {
@@ -107,14 +111,5 @@ API.submitAnswer = async (taskId, answer) => {
   throw new Error(await response.text());
 };
 
-/* --- SHARED ENDPOINTS --- */
-API.getProfile = async () => {
-  const response = await fetch(`${SERVER_URL}/profile`, {
-    credentials: "include",
-  });
-
-  if (response.ok) return await response.json();
-  throw new Error(await response.text());
-};
 
 export default API;

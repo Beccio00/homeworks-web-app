@@ -28,18 +28,33 @@ function App() {
         setUser(null);
         setLoggedIn(false);
       }
-    }; 
+    };
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (message && message.msg) {
+      const timer = setTimeout(() => {
+        setMessage('');
+      }, 4000); 
+
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleLogin = async (credentials) => {
     try {
       const userData = await API.login(credentials);
       setUser(userData);
       setLoggedIn(true);
+      setMessage({ msg: `Benvenuto/a ${userData.name}!`, type: 'success' });
       return { success: true };
     } catch (err) {
-      setMessage({ msg: err.message, type: 'danger' });
+      if (err.status == 401) {
+        setMessage({ msg: 'Password o username errati', type: 'danger' });
+      } else {
+        setMessage({ msg: err.message, type: 'danger' });
+      }
       return { success: false, error: err.message };
     }
   };
@@ -49,6 +64,7 @@ function App() {
       await API.logout();
       setUser(null);
       setLoggedIn(false);
+
     } catch (err) {
       console.error('Logout error:', err);
     }
