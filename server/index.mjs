@@ -101,7 +101,8 @@ app.post("/api/sessions", (req, res, next) => {
         username: user.username,
         name: user.name,
         surname: user.surname,
-        role: user.role
+        role: user.role,
+        avatar: user.avatar
       };
       res.status(201).json(userInfo);
     });

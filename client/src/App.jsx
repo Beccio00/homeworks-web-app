@@ -28,7 +28,7 @@ function App() {
         setUser(null);
         setLoggedIn(false);
       }
-    };
+    }; 
     checkAuth();
   }, []);
 
@@ -37,7 +37,6 @@ function App() {
       const userData = await API.login(credentials);
       setUser(userData);
       setLoggedIn(true);
-      setMessage({ msg: `Benvenuto, ${userData.name}!`, type: 'success' });
       return { success: true };
     } catch (err) {
       setMessage({ msg: err.message, type: 'danger' });
@@ -50,7 +49,6 @@ function App() {
       await API.logout();
       setUser(null);
       setLoggedIn(false);
-      setMessage('');
     } catch (err) {
       console.error('Logout error:', err);
     }
