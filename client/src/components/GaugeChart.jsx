@@ -9,10 +9,10 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
     
     const getGaugeData = () => {
         return [
-            { name: 'Insufficiente', value: 18, color: '#FF0000' }, // Red
-            { name: 'Sufficiente', value: 6, color: '#FF8042' },   // Orange
-            { name: 'Buono', value: 4, color: '#FFBB28' },         // Yellow
-            { name: 'Eccellente', value: 2, color: '#00C49F' }     // Green
+            { value: 18, color: '#FF0000' }, // Red
+            { value: 6, color: '#FF8042' },  // Orange
+            { value: 4, color: '#FFBB28' },  // Yellow
+            { value: 2, color: '#00C49F' }   // Green
         ];
     };
 
@@ -50,9 +50,9 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
     };
 
     return (
-        <div className="text-center" style={{ position: 'relative', userSelect: 'none' }}>
+        <div className="text-center" style={{ position: 'relative' }}>
             <ResponsiveContainer width={width} height={height}>
-                <PieChart style={{ outline: 'none' }}>
+                <PieChart>
                     <Pie
                         data={getGaugeData()}
                         cx="50%"
@@ -63,21 +63,15 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
                         outerRadius={80}
                         dataKey="value"
                         stroke="none"
-                        isAnimationActive={false}
-                        style={{ outline: 'none' }}
                     >
                         {getGaugeData().map((entry, index) => (
-                            <Cell 
-                                key={`cell-${index}`} 
-                                fill={entry.color}
-                                style={{ outline: 'none', cursor: 'default' }}
-                            />
+                            <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                     </Pie>
                 </PieChart>
             </ResponsiveContainer>
-
-                <svg 
+            
+            <svg 
                 style={{ 
                     position: 'absolute', 
                     top: 0, 
@@ -87,11 +81,9 @@ const GaugeChart = ({ value, width = "100%", height = 200 }) => {
                     height: height,
                     pointerEvents: 'none'
                 }}
-                >
+            >
                 {needle(value, getGaugeData(), cx, cy, iR, oR, '#333')}
             </svg>
-            
-
             
             <div style={{ marginTop: '-30px', fontSize: '24px', fontWeight: 'bold', color: getGaugeColor(value) }}>
                 {value.toFixed(1)}/30
