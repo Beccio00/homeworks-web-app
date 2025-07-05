@@ -41,50 +41,25 @@ const TaskRow = ({
                     </div>
                 </td>
                 
-                {isTeacher && (
-                    <td>
-                        <div className="d-flex flex-wrap align-items-center">
-                            {task.students && task.students.map((student) => 
-                                <Avatar key={student.id} {...student} size={32} />
-                            )}
-                            <small className="text-muted ms-1">
-                                ({task.students?.length || 0} studenti)
-                            </small>
-                        </div>
-                    </td>
-                )}
                 
-                {isStudent && activeTab === 'open' && (
-                    <td>
-                        <div className="d-flex flex-wrap align-items-center">
-                            {task.students && task.students.map((student) => 
-                                <Avatar key={student.id} {...student} size={32} />
-                            )}
-                            <small className="text-muted ms-1">
-                                ({task.students?.length || 0} studenti)
-                            </small>
-                        </div>
-                    </td>
-                )}
-                
-                {isStudent && activeTab === 'closed' && (
-                    <td>
-                        {task.answer ? (
-                            <span className="text-truncate" style={{maxWidth: '150px', display: 'inline-block'}}>
-                                {task.answer.length > 50 ? `${task.answer.substring(0, 50)}...` : task.answer}
-                            </span>
-                        ) : (
-                            <span className="text-muted fst-italic">Non risposto</span>
+                <td>
+                    <div className="d-flex flex-wrap align-items-center">
+                        {task.students && task.students.map((student) => 
+                            <Avatar key={student.id || student.username} {...student} size={32} />
                         )}
-                    </td>
-                )}
+                        <small className="text-muted ms-1">
+                            ({task.students?.length || 0} studenti)
+                        </small>
+                    </div>
+                </td>
+            
                 
                 <td>
                     {getTaskStatusBadge(task)}
                 </td>
             </tr>
             <tr>
-                <td colSpan={isTeacher ? "4" : "4"} className="p-0">
+                <td colSpan={"4"} className="p-0">
                     <Collapse in={expanded}>
                         <div className="bg-light p-4 border-top">
                             <TaskDetails

@@ -10,6 +10,7 @@ import passport from "passport";
 import {
   createTask,
   getTasksByTeacher,
+  getTaskById,
   updateTaskScore,
   closeTask,
   getAllTasksByStudent,

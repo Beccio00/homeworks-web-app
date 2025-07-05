@@ -21,9 +21,7 @@ const TaskTable = ({
             <thead>
                 <tr>
                     <th style={{ width: '40%' }}>Domanda</th>
-                    {isTeacher && <th style={{ width: '25%' }}>Studenti</th>}
-                    {isStudent && activeTab === 'open' && <th style={{ width: '25%' }}>Gruppo</th>}
-                    {isStudent && activeTab === 'closed' && <th style={{ width: '25%' }}>Risposta</th>}
+                    <th style={{ width: '25%' }}>Studenti</th>
                     <th style={{ width: '20%' }}>Stato</th>
                 </tr>
             </thead>

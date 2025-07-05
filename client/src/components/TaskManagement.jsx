@@ -100,19 +100,22 @@ const TaskManagement = () => {
     };
 
     const getCurrentTasks = () => {
-        if (isTeacher) return allTasks;
         return activeTab === 'open' ? 
             allTasks.filter(task => task.status === 'open') : 
             allTasks.filter(task => task.status === 'closed');
     };
 
     const getCurrentTasksTitle = () => {
-        if (isTeacher) return '📝 Compiti Assegnati';
+        if (isTeacher) {
+            return activeTab === 'open' ? '� Compiti Aperti' : '✅ Compiti Chiusi';
+        }
         return activeTab === 'open' ? '📚 I Tuoi Compiti Aperti' : '✅ Compiti Completati';
     };
 
     const getEmptyMessage = () => {
-        if (isTeacher) return 'Nessun compito assegnato ancora.';
+        if (isTeacher) {
+            return activeTab === 'open' ? 'Nessun compito aperto al momento.' : 'Nessun compito chiuso ancora.';
+        }
         return activeTab === 'open' ? 'Non hai compiti aperti al momento.' : 'Non hai ancora completato nessun compito.';
     };
 
