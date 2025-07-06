@@ -56,7 +56,12 @@ API.createTask = async (taskData) => {
   });
 
   if (response.ok) return await response.json();
-  throw new Error(await response.text());
+  
+  const errorData = await response.json().catch(() => null);
+  const error = new Error(errorData.error);
+  error.status = response.status;
+  error.data = errorData;
+  throw error;
 };
 
 API.getTeacherTasks = async () => {
@@ -108,7 +113,11 @@ API.submitAnswer = async (taskId, answer) => {
   });
 
   if (response.ok) return await response.json();
-  throw new Error(await response.text());
+  
+  const errorData = await response.json().catch(() => null);
+  const error = new Error(errorData?.error);
+  error.status = response.status;
+  throw error;
 };
 
 

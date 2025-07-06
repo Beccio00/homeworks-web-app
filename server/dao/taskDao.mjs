@@ -1,49 +1,31 @@
 import db from '../data/db.mjs';
 
-// Create a new task
-export const createTask = (teacherId, question, studentIds) => {
+export const createTask = (teacherId, question) => {
   return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      db.run("BEGIN TRANSACTION", (err) => {
-        if (err) return reject(err);
-
-        const sqltask = 'INSERT INTO tasks(teacher_id, question, status, created_at) VALUES(?, ?, "open", datetime("now"))';
-        db.run(sqltask, [teacherId, question], function (err) {
-          if (err) {
-            db.run("ROLLBACK");
-            return reject(err);
-          }
-
-          const taskId = this.lastID;
-
-          const sqlStudents = 'INSERT INTO task_students(task_id, student_id) VALUES(?, ?)';
-          let completed = 0;
-          let hasError = false;
-
-          studentIds.forEach(studentId => {
-            db.run(sqlStudents, [taskId, studentId], function (err) {
-              if (err && !hasError) {
-                hasError = true;
-                db.run("ROLLBACK");
-                return reject(err);
-              }
-              
-              completed++;
-              if (completed === studentIds.length && !hasError) {
-                db.run("COMMIT", (err) => {
-                  if (err) return reject(err);
-                  resolve(taskId);
-                });
-              }
-            });
-          });
-        });
-      });
+    const sql = 'INSERT INTO tasks(teacher_id, question, status, created_at) VALUES(?, ?, "open", datetime("now"))';
+    db.run(sql, [teacherId, question], function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.lastID);
+      }
     });
   });
 };
 
-// Get all tasks by teacher
+export const addStudentToTask = (taskId, studentId) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'INSERT INTO task_students(task_id, student_id) VALUES(?, ?)';
+    db.run(sql, [taskId, studentId], function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.changes);
+      }
+    });
+  });
+};
+
 export const getTasksByTeacher = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sqlTasks = `
@@ -52,7 +34,7 @@ export const getTasksByTeacher = (teacherId) => {
       WHERE a.teacher_id = ?
       ORDER BY a.created_at DESC
     `;
-    
+
     db.all(sqlTasks, [teacherId], (err, taskRows) => {
       if (err) {
         reject(err);
@@ -66,13 +48,12 @@ export const getTasksByTeacher = (teacherId) => {
 
       const taskIds = taskRows.map(task => task.id);
       const placeholders = taskIds.map(() => '?').join(',');
-      
+
       const sqlStudents = `
         SELECT tk.task_id, u.id, u.name, u.surname, u.username, u.avatar, u.role
         FROM task_students tk
         JOIN users u ON tk.student_id = u.id
         WHERE tk.task_id IN (${placeholders})
-        ORDER BY tk.task_id, u.name, u.surname
       `;
 
       db.all(sqlStudents, taskIds, (err, studentRows) => {
@@ -112,7 +93,6 @@ export const getTasksByTeacher = (teacherId) => {
   });
 };
 
-// Get task by ID with full details
 export const getTaskById = (taskId) => {
   return new Promise((resolve, reject) => {
     let sql = `
@@ -135,7 +115,7 @@ export const getTaskById = (taskId) => {
           JOIN task_students tk ON u.id = tk.student_id
           WHERE tk.task_id = ?
         `;
-        
+
         db.all(sqlStudents, [taskId], (err, students) => {
           if (err)
             reject(err);
@@ -158,7 +138,6 @@ export const getTaskById = (taskId) => {
   });
 };
 
-// Update task score and close it
 export const updateTaskScore = (taskId, score) => {
   return new Promise((resolve, reject) => {
     const sql = 'UPDATE tasks SET score = ? WHERE id = ?';
@@ -171,7 +150,6 @@ export const updateTaskScore = (taskId, score) => {
   });
 };
 
-// Close task
 export const closeTask = (taskId) => {
   return new Promise((resolve, reject) => {
     const sql = 'UPDATE tasks SET status = "closed" WHERE id = ?';
@@ -184,7 +162,6 @@ export const closeTask = (taskId) => {
   });
 };
 
-// Update task answer
 export const updateTaskAnswer = (taskId, answer) => {
   return new Promise((resolve, reject) => {
     const sql = 'UPDATE tasks SET answer = ? WHERE id = ?';
@@ -197,8 +174,6 @@ export const updateTaskAnswer = (taskId, answer) => {
   });
 };
 
-
-// Get class overview for teacher
 export const getClassOverview = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -252,19 +227,19 @@ export const getClassOverview = (teacherId) => {
         const openTasks = student.tasks.filter(t => t.status === 'open').length;
         const closedTasks = student.tasks.filter(t => t.status === 'closed').length;
         const totalTasks = student.tasks.length;
-        
+
         const closedTasksWithScores = student.tasks.filter(t => t.status === 'closed' && t.score !== null);
         let averageScore = 0;
-        
+
         if (closedTasksWithScores.length > 0) {
           const weightedSum = closedTasksWithScores.reduce((sum, task) => {
             return sum + (task.score * (1.0 / task.groupSize));
           }, 0);
-          
+
           const totalWeight = closedTasksWithScores.reduce((sum, task) => {
             return sum + (1.0 / task.groupSize);
           }, 0);
-          
+
           averageScore = Math.round((weightedSum / totalWeight) * 100) / 100;
         }
 
@@ -322,7 +297,6 @@ export const getClassOverview = (teacherId) => {
   });
 };
 
-// Get all tasks for a student (both open and closed)
 export const getAllTasksByStudent = (studentId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -337,7 +311,7 @@ export const getAllTasksByStudent = (studentId) => {
       GROUP BY a.id
       ORDER BY a.created_at DESC
     `;
-    
+
     db.all(sql, [studentId], (err, rows) => {
       if (err) {
         reject(err);
@@ -354,7 +328,7 @@ export const getAllTasksByStudent = (studentId) => {
 
       const taskIds = rows.map(row => row.id);
       const placeholders = taskIds.map(() => '?').join(',');
-      
+
       const sqlStudents = `
         SELECT tk.task_id, u.name, u.surname, u.username, u.avatar, u.role
         FROM task_students tk
@@ -402,19 +376,19 @@ export const getAllTasksByStudent = (studentId) => {
 
         const closedTasksWithScores = tasks.filter(task => task.status === 'closed' && task.score !== null);
         let weightedAverage = 0;
-        
+
         if (closedTasksWithScores.length > 0) {
           const weightedSum = closedTasksWithScores.reduce((sum, task) => {
             return sum + (task.score * (1.0 / task.groupSize));
           }, 0);
-          
+
           const totalWeight = closedTasksWithScores.reduce((sum, task) => {
             return sum + (1.0 / task.groupSize);
           }, 0);
-          
+
           weightedAverage = Math.round((weightedSum / totalWeight) * 100) / 100;
         }
-        
+
         resolve({
           tasks,
           weightedAverage

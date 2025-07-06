@@ -1,9 +1,8 @@
 import  db  from '../data/db.mjs';
 
-// Get all students
 export const getAllStudents = () => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, name, surname, avatar, role FROM users WHERE role = "student" ORDER BY surname, name';
+    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE role = "student" ORDER BY surname, name';
     db.all(sql, [], (err, rows) => {
       if (err)
         reject(err);
@@ -14,7 +13,6 @@ export const getAllStudents = () => {
           name: row.name,
           surname: row.surname,
           avatar: row.avatar,
-          role: row.role
         }));
         resolve(students);
       }
@@ -22,30 +20,8 @@ export const getAllStudents = () => {
   });
 };
 
-// Get student by ID
-export const getStudentById = (studentId) => {
-  return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, name, surname, avatar FROM users WHERE id = ? AND role = "student"';
-    db.get(sql, [studentId], (err, row) => {
-      if (err)
-        reject(err);
-      else if (row === undefined)
-        resolve(null);
-      else {
-        resolve({
-          id: row.id,
-          username: row.username,
-          name: row.name,
-          surname: row.surname,
-          avatar: row.avatar
-        });
-      }
-    });
-  });
-};
 
-// Check if a group of students can collaborate (max 2 previous collaborations for any pair)
-export const checkGroupCollaborations = (studentIds, teacherId) => { //FIXME: don't work
+export const  checkGroupCollaborations = (studentIds, teacherId) => { 
   return new Promise((resolve, reject) => {
     const pairs = [];
     for (let i = 0; i < studentIds.length; i++) {
@@ -55,14 +31,18 @@ export const checkGroupCollaborations = (studentIds, teacherId) => { //FIXME: do
     }
 
     let checkedPairs = 0;
-    let canCreateGroup = true;
+    let problematicPairs = [];
 
     pairs.forEach(pair => {
       const sql = `
-        SELECT COUNT(*) as collaboration_count
+        SELECT COUNT(*) as collaboration_count,
+               u1.username as student1_username,
+               u2.username as student2_username
         FROM tasks a
         JOIN task_students tk1 ON a.id = tk1.task_id
         JOIN task_students tk2 ON a.id = tk2.task_id
+        JOIN users u1 ON tk1.student_id = u1.id
+        JOIN users u2 ON tk2.student_id = u2.id
         WHERE a.teacher_id = ?
         AND tk1.student_id = ?
         AND tk2.student_id = ?
@@ -75,19 +55,21 @@ export const checkGroupCollaborations = (studentIds, teacherId) => { //FIXME: do
         }
 
         if (row.collaboration_count >= 2) {
-          canCreateGroup = false;
+          problematicPairs.push({
+            student1: row.student1_username,
+            student2: row.student2_username
+          });
         }
 
         checkedPairs++;
         if (checkedPairs === pairs.length) {
-          resolve(canCreateGroup);
+          resolve(problematicPairs);
         }
       });
     });
   });
 };
 
-// Get students with their collaboration history for a specific teacher
 export const getStudentsCollaborationHistory = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sql = `

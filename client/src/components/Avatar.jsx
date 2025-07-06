@@ -6,7 +6,7 @@ const Avatar = (props) => {
     return (
         <img key={props.id}
             src={
-                    props?.avatar ? (`${baseUrl}${props.avatar}`) : `${baseUrl}${props.role}_default.png`
+                    props?.avatar ? (`${baseUrl}${props.avatar}`) : `${baseUrl}user_default.png`
             }
 
             alt={`${props.name} ${props.surname}`}

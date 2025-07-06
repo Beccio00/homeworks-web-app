@@ -176,10 +176,11 @@ const TaskDetails = () => {
                                             <Table responsive hover>
                                                 <thead>
                                                     <tr>
-                                                        <th style={{ width: '50%' }}>Studente</th>
-                                                        <th style={{ width: '17%' }}>Aperti</th>
-                                                        <th style={{ width: '17%' }}>Chiusi</th>
-                                                        <th style={{ width: '16%' }}>Media</th>
+                                                        <th style={{ width: '40%' }}>Studente</th>
+                                                        <th style={{ width: '12%' }}>Aperti</th>
+                                                        <th style={{ width: '12%' }}>Chiusi</th>
+                                                        <th style={{ width: '12%' }}>Totali</th>
+                                                        <th style={{ width: '24%' }}>Media</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -206,6 +207,11 @@ const TaskDetails = () => {
                                                             <td>
                                                                 <Badge bg={student.closedTasks > 0 ? "success" : "secondary"}>
                                                                     {student.closedTasks}
+                                                                </Badge>
+                                                            </td>
+                                                            <td>
+                                                                <Badge bg={student.totalTasks > 0 ? "info" : "secondary"}>
+                                                                    {student.totalTasks}
                                                                 </Badge>
                                                             </td>
                                                             <td>

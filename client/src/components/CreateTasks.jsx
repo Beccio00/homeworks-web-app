@@ -70,7 +70,13 @@ const CreateTasks = () => {
             setSelectedStudents([]);
 
         } catch (err) {
-            setError(`Errore nella creazione del compito: ${err.message}`);
+            console.log(err.data.problematicPairs);
+            if (err.status === 409) {
+                setError('Errore nella creazione del compito: i seguenti studenti hanno già collaborato insieme in un gruppo: ' +
+                    err.data.problematicPairs.map(pair => `${pair.student1} e ${pair.student2}`).join(', '));
+            } else {
+                setError('Errore nella creazione del compito: ' + err.message);
+            }
         } finally {
             setLoading(false);
         }

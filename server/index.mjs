@@ -1,4 +1,3 @@
-// imports
 import cors from "cors";
 import express from 'express';
 import morgan from 'morgan';
@@ -9,6 +8,7 @@ import passport from "passport";
 
 import {
   createTask,
+  addStudentToTask,
   getTasksByTeacher,
   getTaskById,
   updateTaskScore,
@@ -20,12 +20,10 @@ import {
 
 import {
   getAllStudents,
-  getStudentById,
   checkGroupCollaborations
 } from "./dao/studentDao.mjs";
 
 
-// init express
 const app = new express();
 const port = 3001;
 
@@ -78,6 +76,8 @@ const validate = (req, res, next) => {
 };
 
 /* --- AUTH --- */
+
+// Login
 app.post("/api/sessions", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) return next(err);
@@ -101,6 +101,7 @@ app.post("/api/sessions", (req, res, next) => {
   })(req, res, next);
 });
 
+// Session
 app.get("/api/sessions/current", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authenticated" });
@@ -117,6 +118,7 @@ app.get("/api/sessions/current", (req, res) => {
   res.json(userInfo);a
 });
 
+// Logout
 app.delete("/api/sessions/current", (req, res) =>
   req.logout((err) =>
     err
@@ -127,6 +129,7 @@ app.delete("/api/sessions/current", (req, res) =>
 
 /* --- TEACHER ROUTES --- */
 
+// Get all students
 app.get("/api/students", isTeacher, async (req, res) => {
   try {
     const students = await getAllStudents();
@@ -136,6 +139,7 @@ app.get("/api/students", isTeacher, async (req, res) => {
   }
 });
 
+// Create a task
 app.post("/api/tasks/teacher", isTeacher,
   [
     body("question").isLength({ min: 1 }),
@@ -156,21 +160,27 @@ app.post("/api/tasks/teacher", isTeacher,
         });
       }
 
-      const canCreateGroup = await checkGroupCollaborations(studentIds, teacherId);
-      if (!canCreateGroup) {
-        return res.status(400).json({ 
-          error: "Some students in this group have already collaborated together in 2 or more tasks" 
-        });
+      const problematicPairs = await checkGroupCollaborations(studentIds, teacherId);
+      if (problematicPairs.length > 0) {
+        return res.status(409).json({
+          error: "Some students in this group have already collaborated together in 2 or more tasks",
+          problematicPairs});
       }
 
-      const taskId = await createTask(teacherId, question, studentIds);
-      res.status(201).json({ taskId, message: "task created successfully" });
+      const taskId = await createTask(teacherId, question);
+      
+      for (const studentId of studentIds) {
+        await addStudentToTask(taskId, studentId);
+      }
+      
+      res.status(201).json({message: "task created successfully" });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   }
 );
 
+// Get tasks by teacher
 app.get("/api/tasks/teacher", isTeacher, async (req, res) => {
   try {
     const tasks = await getTasksByTeacher(req.user.id);
@@ -180,6 +190,7 @@ app.get("/api/tasks/teacher", isTeacher, async (req, res) => {
   }
 });
 
+// Score a task
 app.put("/api/tasks/teacher/:id/score", isTeacher,
   [
     body("score").isFloat({ min: 0, max: 30 })
@@ -218,6 +229,7 @@ app.put("/api/tasks/teacher/:id/score", isTeacher,
   }
 );
 
+// Get task datails
 app.get("/api/class-overview", isTeacher, async (req, res) => {
   try {
     const overview = await getClassOverview(req.user.id);
@@ -229,6 +241,7 @@ app.get("/api/class-overview", isTeacher, async (req, res) => {
 
 /* --- STUDENT ROUTES --- */
 
+// Get tasks for a student
 app.get("/api/tasks/student", isStudent, async (req, res) => {
   try {
     const result = await getAllTasksByStudent(req.user.id);
@@ -238,6 +251,7 @@ app.get("/api/tasks/student", isStudent, async (req, res) => {
   }
 });
 
+// Modify a task answer
 app.put("/api/tasks/student/:id/answer", isStudent,
   [
     body("answer").isLength({ min: 1 })

@@ -84,7 +84,11 @@ const TaskManagement = () => {
             setEditingAnswer(null);
             await fetchTasks(); 
         } catch (err) {
-            setError('Errore durante il salvataggio della risposta: ' + err.message);
+            if (err.status === 409) {
+                setError('Errore durante il salvataggio della risposta: il compito è già stato chiuso e valutato.');
+            } else {  
+                setError('Errore durante il salvataggio della risposta: ' + err.message);
+            }
         } finally {
             setEditingAnswer(null);
         }
@@ -104,12 +108,6 @@ const TaskManagement = () => {
             allTasks.filter(task => task.status === 'closed');
     };
 
-    const getCurrentTasksTitle = () => {
-        if (isTeacher) {
-            return activeTab === 'open' ? '� Compiti Aperti' : '✅ Compiti Chiusi';
-        }
-        return activeTab === 'open' ? '📚 I Tuoi Compiti Aperti' : '✅ Compiti Completati';
-    };
 
     const getEmptyMessage = () => {
         if (isTeacher) {
