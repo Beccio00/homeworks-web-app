@@ -59,7 +59,7 @@ const requireAuth = (req, res, next) => {
 const requireRole = (role) => (req, res, next) => {
   if (req.user.role !== role) {
     return res.status(403).json({ 
-      error: `${role.charAt(0).toUpperCase() + role.slice(1)} access required` 
+      error: `access required` 
     });
   }
   next();
@@ -115,7 +115,8 @@ app.get("/api/sessions/current", (req, res) => {
     role: req.user.role,
     avatar: req.user.avatar    
   };
-  res.json(userInfo);a
+  res.json(userInfo);
+  res.status(200);
 });
 
 // Logout
@@ -229,7 +230,7 @@ app.put("/api/tasks/teacher/:id/score", isTeacher,
   }
 );
 
-// Get task datails
+// Get task overview
 app.get("/api/class-overview", isTeacher, async (req, res) => {
   try {
     const overview = await getClassOverview(req.user.id);

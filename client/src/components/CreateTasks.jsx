@@ -14,24 +14,15 @@ const CreateTasks = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        let isMounted = true;
-
         const fetchStudents = async () => {
             try {
                 const studentsData = await API.getStudents();
-                if (isMounted) {
-                    setStudents(studentsData);
-                }
+                setStudents(studentsData);
             } catch (err) {
-                if (isMounted) {
-                    setError('Errore nel caricamento degli studenti');
-                }
+                setError('Errore nel caricamento degli studenti');
             }
         };
         fetchStudents();
-        return () => {
-            isMounted = false;
-        };
     }, []);
 
     const handleStudentChange = (studentId, isChecked) => {

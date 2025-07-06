@@ -41,7 +41,7 @@
 
 - **GET** `/api/sessions/current`
   - **Description**: Get current user session
-  - **Response**:
+  - **Response** (200):
     ```json
     {
       "id": number,
@@ -77,6 +77,8 @@
       }
     ]
     ```
+  - **Errors**:
+    - 500 Internal Server Error
 
 - **POST** `/api/tasks/teacher`
   - **Description**: Create a new task
@@ -111,6 +113,7 @@
       }
       ```
     - 422 Validation Error
+    - 500 Internal Server Error
 
 - **GET** `/api/tasks/teacher`
   - **Description**: Get all tasks created by the teacher
@@ -126,17 +129,17 @@
         "createdAt": "string",
         "students": [
           {
-            "id": number,
             "name": "string",
             "surname": "string",
             "username": "string",
             "avatar": "string",
-            "role": "student"
           }
         ]
       }
     ]
     ```
+  - **Errors**:
+    - 500 Internal Server Error
 
 - **PUT** `/api/tasks/teacher/:id/score`
   - **Description**: Score and close a task
@@ -159,20 +162,19 @@
     - 403 Forbidden: Access denied to this task
     - 404 Not Found: Task not found
     - 409 Conflict: Task is already closed
+    - 500 Internal Server Error
 
 - **GET** `/api/class-overview`
-  - **Description**: Get class overview with student statistics
+  - **Description**: Get class overview with all students and their statistics for tasks created by the teacher
   - **Response**:
     ```json
     {
       "students": [
         {
-          "id": number,
           "name": "string",
           "surname": "string",
           "username": "string",
           "avatar": "string",
-          "role": "student",
           "openTasks": number,
           "closedTasks": number,
           "totalTasks": number,
@@ -184,6 +186,8 @@
       "totalTasks": number
     }
     ```
+  - **Errors**:
+    - 500 Internal Server Error
 
 ### **Student Routes** (Require student authentication)
 
@@ -212,8 +216,7 @@
               "name": "string",
               "surname": "string",
               "username": "string",
-              "avatar": "string",
-              "role": "student"
+              "avatar": "string"
             }
           ]
         }
@@ -242,6 +245,7 @@
     - 403 Forbidden: You are not part of this task group
     - 404 Not Found: Task not found
     - 409 Conflict: Task is closed and cannot be modified
+    - 500 Internal Server Error
 
 ### **Static Files**
 
@@ -297,11 +301,15 @@ M:N relation between tasks and students assigned to them
 
 ## Main React Components
 
-- `ListOfSomething` (in `List.js`): component purpose and main functionality
-- `GreatButton` (in `GreatButton.js`): component purpose and main functionality
-- ...
-
-(only _main_ components, minor ones may be skipped)
+- `DefaultLayout` (in `DefaultLayout.jsx`): component to manage the navbar, authentication context, and the default layout wrapper for all pages
+- `Dashboard` (in `Dashboard.jsx`): main dashboard component showing different views for teachers (class statistics, quick actions) and students (personal stats, assigned tasks overview)
+- `TaskManagement` (in `TaskManagement.jsx`): core component for task management with different interfaces for teachers (view/score tasks) and students (view/answer tasks) with tab-based navigation
+- `CreateTasks` (in `CreateTasks.jsx`): component for teachers to create new tasks with question input, student selection interface, and collaboration conflict detection
+- `TaskDetails` (in `TaskDetails.jsx`): component for teachers to view complete class overview with all students and their statistics, task counts (including students with 0 tasks), and sortable table with progress tracking
+- `AuthComponents` (in `AuthComponents.jsx`): authentication component managing login form with username/password validation and user session handling
+- `TaskTable` (in `TaskTable/`): modular table system with components for displaying tasks (`TaskTable.jsx`), individual rows (`TaskRow.jsx`), headers with tabs (`TaskHeader.jsx`), and expandable details (`TaskDetails.jsx`)
+- `NavHeader` (in `NavHeader.jsx`): navigation component with role-based menu items, user profile display, and logout functionality
+- `NotFound` (in `NotFound.jsx`): 404 error page component with navigation back to main application areas
 
 ## Screenshot
 

@@ -3,7 +3,8 @@ import { Container, Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { API } from '../API/API.mjs';
-import { TaskTable, TaskHeader } from './TaskTable';
+import TaskHeader from './TaskTable/TaskHeader';
+import TaskTable from './TaskTable/TaskTable';
 
 const TaskManagement = () => {
     const { user, setMessage } = useContext(AuthContext);
@@ -21,7 +22,7 @@ const TaskManagement = () => {
 
     useEffect(() => {
         fetchTasks();
-    }, [user.role]);
+    }, [user]);
 
     const fetchTasks = async () => {
         try {

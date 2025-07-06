@@ -39,10 +39,10 @@ export const  checkGroupCollaborations = (studentIds, teacherId) => {
                u1.username as student1_username,
                u2.username as student2_username
         FROM tasks a
-        JOIN task_students tk1 ON a.id = tk1.task_id
-        JOIN task_students tk2 ON a.id = tk2.task_id
-        JOIN users u1 ON tk1.student_id = u1.id
-        JOIN users u2 ON tk2.student_id = u2.id
+        LEFT JOIN task_students tk1 ON a.id = tk1.task_id
+        LEFT JOIN task_students tk2 ON a.id = tk2.task_id
+        LEFT JOIN users u1 ON tk1.student_id = u1.id
+        LEFT JOIN users u2 ON tk2.student_id = u2.id
         WHERE a.teacher_id = ?
         AND tk1.student_id = ?
         AND tk2.student_id = ?
@@ -80,10 +80,10 @@ export const getStudentsCollaborationHistory = (teacherId) => {
         u2.name as student2_name,
         COUNT(*) as collaboration_count
       FROM tasks a
-      JOIN task_students tk1 ON a.id = tk1.task_id
-      JOIN task_students tk2 ON a.id = tk2.task_id
-      JOIN users u1 ON tk1.student_id = u1.id
-      JOIN users u2 ON tk2.student_id = u2.id
+      LEFT JOIN task_students tk1 ON a.id = tk1.task_id
+      LEFT JOIN task_students tk2 ON a.id = tk2.task_id
+      LEFT JOIN users u1 ON tk1.student_id = u1.id
+      LEFT JOIN users u2 ON tk2.student_id = u2.id
       WHERE a.teacher_id = ?
       AND tk1.student_id < tk2.student_id
       GROUP BY u1.id, u2.id, u1.name, u2.name

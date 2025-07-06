@@ -10,24 +10,16 @@ function NavHeader() {
   return (
     <Navbar bg="primary" variant="dark" expand="lg">
       <Container className={loggedIn ? "d-flex justify-content-between align-items-center" : ""}>
-        {loggedIn && (
-          <Nav>
-            <Nav.Link as={Link} to="/" className="text-white">
-              🏠 Home
-            </Nav.Link>
-          </Nav>
-        )}
         
         <Navbar.Brand 
           as={Link} 
           to="/" 
-          className={loggedIn ? "position-absolute start-50 translate-middle-x" : "text-white"}
         >
           Compiti App
         </Navbar.Brand>
         
         <Nav className="ms-auto">
-          {loggedIn ? (
+          {loggedIn && (
             <Dropdown align="end">
               <Dropdown.Toggle 
                 as="div" 
@@ -44,10 +36,6 @@ function NavHeader() {
                 </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
-          ) : (
-            <Button as={Link} to="/login" variant="outline-light">
-              Login
-            </Button>
           )}
         </Nav>
       </Container>

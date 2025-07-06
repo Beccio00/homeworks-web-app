@@ -50,7 +50,7 @@ export const getTasksByTeacher = (teacherId) => {
       const placeholders = taskIds.map(() => '?').join(',');
 
       const sqlStudents = `
-        SELECT tk.task_id, u.id, u.name, u.surname, u.username, u.avatar, u.role
+        SELECT tk.task_id, u.id, u.name, u.surname, u.username, u.avatar
         FROM task_students tk
         JOIN users u ON tk.student_id = u.id
         WHERE tk.task_id IN (${placeholders})
@@ -68,12 +68,10 @@ export const getTasksByTeacher = (teacherId) => {
             studentsByTask[student.task_id] = [];
           }
           studentsByTask[student.task_id].push({
-            id: student.id,
             name: student.name,
             surname: student.surname,
             username: student.username,
             avatar: student.avatar,
-            role: student.role
           });
         });
 
@@ -177,18 +175,18 @@ export const updateTaskAnswer = (taskId, answer) => {
 export const getClassOverview = (teacherId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT u.id, u.name, u.surname, u.username, u.avatar, u.role,
+      SELECT u.id, u.name, u.surname, u.username, u.avatar,
              a.id as task_id, a.status, a.score,
              group_sizes.group_size
       FROM users u
-      JOIN task_students tk ON u.id = tk.student_id
-      JOIN tasks a ON tk.task_id = a.id AND a.teacher_id = ?
-      JOIN (
+      LEFT JOIN task_students tk ON u.id = tk.student_id
+      LEFT JOIN tasks a ON tk.task_id = a.id AND a.teacher_id = ?
+      LEFT JOIN (
         SELECT task_id, COUNT(*) as group_size
         FROM task_students
         GROUP BY task_id
       ) group_sizes ON a.id = group_sizes.task_id
-      WHERE u.role = 'student' AND a.id IS NOT NULL
+      WHERE u.role = 'student'
       ORDER BY u.id, a.created_at
     `;
 
@@ -244,12 +242,10 @@ export const getClassOverview = (teacherId) => {
         }
 
         return {
-          id: student.id,
           name: student.name,
           surname: student.surname,
           username: student.username,
           avatar: student.avatar,
-          role: student.role,
           openTasks,
           closedTasks,
           totalTasks,
@@ -352,8 +348,7 @@ export const getAllTasksByStudent = (studentId) => {
             name: student.name,
             surname: student.surname,
             username: student.username,
-            avatar: student.avatar,
-            role: student.role
+            avatar: student.avatar
           });
         });
 

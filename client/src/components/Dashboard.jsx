@@ -13,18 +13,12 @@ const Dashboard = () => {
   const [totalStudents, setTotalStudents] = useState(0);
 
   useEffect(() => {
-    let isMounted = true;
-    if (isMounted) {
-      if (user.role === 'teacher') {
-        fetchTeacherStats();
-      } else if (user.role === 'student') {
-        fetchStudentStats();
-      }
+    if (user.role === 'teacher') {
+      fetchTeacherStats();
+    } else if (user.role === 'student') {
+      fetchStudentStats();
     }
-    return () => {
-      isMounted = false; // Cleanup to avoid memory leaks
-    }
-  }, [user.role]);
+  }, [user]);
 
   const fetchTeacherStats = async () => {
     try {
