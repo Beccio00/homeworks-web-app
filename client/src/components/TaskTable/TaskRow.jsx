@@ -19,7 +19,6 @@ const TaskRow = ({
     onStartEditingAnswer,
     onCancelEditingAnswer
 }) => {
-    console.log(task)
     return (
         <>
             <tr 

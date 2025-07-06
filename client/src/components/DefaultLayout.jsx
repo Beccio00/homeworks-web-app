@@ -1,4 +1,4 @@
-import { Alert, Container, Row } from "react-bootstrap";
+import { Alert, Container } from "react-bootstrap";
 import { Outlet } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../contexts/AuthContext";
@@ -10,10 +10,24 @@ function DefaultLayout() {
   return(
     <>
       <NavHeader />
+      
+      {message && (
+        <Alert 
+          variant={message.type} 
+          onClose={() => setMessage('')} 
+          dismissible
+          className="position-fixed top-0 start-50 translate-middle-x mt-2"
+          style={{ 
+            zIndex: 1050,
+            minWidth: '300px',
+            maxWidth: '500px'
+          }}
+        >
+          {message.msg}
+        </Alert>
+      )}
+      
       <Container fluid className="mt-3">
-        {message && <Row>
-          <Alert variant={message.type} onClose={() => setMessage('')} dismissible>{message.msg}</Alert>
-        </Row>}
         <Outlet />
       </Container>
     </>

@@ -14,15 +14,24 @@ const CreateTasks = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchStudents = async () => {
             try {
                 const studentsData = await API.getStudents();
-                setStudents(studentsData);
+                if (isMounted) {
+                    setStudents(studentsData);
+                }
             } catch (err) {
-                setError('Errore nel caricamento degli studenti');
+                if (isMounted) {
+                    setError('Errore nel caricamento degli studenti');
+                }
             }
         };
         fetchStudents();
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const handleStudentChange = (studentId, isChecked) => {
@@ -55,18 +64,18 @@ const CreateTasks = () => {
                 question: question.trim(),
                 studentIds: selectedStudents
             });
-            
+
             setMessage({ msg: 'Compito creato con successo!', type: 'success' });
             setQuestion('');
             setSelectedStudents([]);
-            
+
         } catch (err) {
             setError(`Errore nella creazione del compito: ${err.message}`);
         } finally {
             setLoading(false);
         }
     };
-    return(
+    return (
         <Container className="mt-4">
             <Row>
                 <Col>
@@ -77,9 +86,9 @@ const CreateTasks = () => {
                                 Benvenuto, {user.name}! Qui puoi creare e gestire i compiti per i tuoi studenti.
                             </p>
                         </div>
-                        <Button 
-                            as={Link} 
-                            to="/tasks" 
+                        <Button
+                            as={Link}
+                            to="/tasks"
                             variant="outline-primary"
                             className="d-flex align-items-center"
                         >
@@ -142,17 +151,17 @@ const CreateTasks = () => {
                                 </div>
                                 <div className="mt-3 d-flex justify-content-between align-items-center">
                                     <small className="text-muted">
-                                        Selezionati: {selectedStudents.length} studenti  
+                                        Selezionati: {selectedStudents.length} studenti
                                         <span className={selectedStudents.length >= 2 && selectedStudents.length <= 6 ? "text-success" : "text-danger"}>
                                             {selectedStudents.length < 2 && " (minimo 2)"}
                                             {selectedStudents.length > 6 && " (massimo 6)"}
                                             {selectedStudents.length >= 2 && selectedStudents.length <= 6 && " ✓"}
                                         </span>
-                                    
+
                                     </small>
                                     {selectedStudents.length > 0 && (
-                                        <Button 
-                                            variant="outline-secondary" 
+                                        <Button
+                                            variant="outline-secondary"
                                             size="sm"
                                             onClick={() => setSelectedStudents([])}
                                             disabled={loading}
@@ -170,11 +179,11 @@ const CreateTasks = () => {
                                 show={loading || selectedStudents.length < 2 || selectedStudents.length > 6 ? undefined : false}
                                 overlay={
                                     <Tooltip id="button-tooltip">
-                                        {loading 
-                                            ? 'Attendere, creazione in corso...' 
-                                            : selectedStudents.length < 2 
-                                                ? 'Seleziona almeno 2 studenti' 
-                                                : selectedStudents.length > 6 
+                                        {loading
+                                            ? 'Attendere, creazione in corso...'
+                                            : selectedStudents.length < 2
+                                                ? 'Seleziona almeno 2 studenti'
+                                                : selectedStudents.length > 6
                                                     ? 'Seleziona massimo 6 studenti'
                                                     : ''
                                         }
@@ -182,9 +191,9 @@ const CreateTasks = () => {
                                 }
                             >
                                 <span>
-                                    <Button 
-                                        type="submit" 
-                                        variant="primary" 
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
                                         size="lg"
                                         disabled={loading || selectedStudents.length < 2 || selectedStudents.length > 6}
                                     >

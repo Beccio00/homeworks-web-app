@@ -113,7 +113,7 @@ export const getTasksByTeacher = (teacherId) => {
 };
 
 // Get task by ID with full details
-export const getTaskById = (taskId, teacherId = null) => {
+export const getTaskById = (taskId) => {
   return new Promise((resolve, reject) => {
     let sql = `
       SELECT a.*, u_teacher.name as teacher_name
@@ -122,11 +122,6 @@ export const getTaskById = (taskId, teacherId = null) => {
       WHERE a.id = ?
     `;
     let params = [taskId];
-
-    if (teacherId) {
-      sql += ' AND a.teacher_id = ?';
-      params.push(teacherId);
-    }
 
     db.get(sql, params, (err, row) => {
       if (err)
@@ -153,7 +148,6 @@ export const getTaskById = (taskId, teacherId = null) => {
               status: row.status,
               createdAt: row.created_at,
               teacherId: row.teacher_id,
-              teacherName: row.teacher_name,
               students: students
             };
             resolve(task);
@@ -212,9 +206,9 @@ export const getClassOverview = (teacherId) => {
              a.id as task_id, a.status, a.score,
              group_sizes.group_size
       FROM users u
-      LEFT JOIN task_students tk ON u.id = tk.student_id
-      LEFT JOIN tasks a ON tk.task_id = a.id AND a.teacher_id = ?
-      LEFT JOIN (
+      JOIN task_students tk ON u.id = tk.student_id
+      JOIN tasks a ON tk.task_id = a.id AND a.teacher_id = ?
+      JOIN (
         SELECT task_id, COUNT(*) as group_size
         FROM task_students
         GROUP BY task_id
@@ -358,7 +352,6 @@ export const getAllTasksByStudent = (studentId) => {
         return;
       }
 
-      // Per ogni task, ottieni i dettagli completi degli studenti del gruppo
       const taskIds = rows.map(row => row.id);
       const placeholders = taskIds.map(() => '?').join(',');
       
@@ -376,7 +369,6 @@ export const getAllTasksByStudent = (studentId) => {
           return;
         }
 
-        // Raggruppa gli studenti per task
         const studentsByTask = {};
         studentRows.forEach(student => {
           if (!studentsByTask[student.task_id]) {

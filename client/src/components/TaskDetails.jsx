@@ -43,10 +43,6 @@ const TaskDetails = () => {
         return 'danger';
     };
 
-    const getTasksStatusText = (openTasks, closedTasks, totalTasks) => {
-        return `${closedTasks}/${totalTasks} completati`;
-    };
-
     const handleSort = (field) => {
         if (sortBy === field) {
             setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -122,7 +118,6 @@ const TaskDetails = () => {
                                         </div>
                                     ) : (
                                         <>
-                                            {/* Statistiche generali */}
                                             <Row className="mb-4">
                                                 <Col md={3}>
                                                     <div className="text-center">
@@ -150,7 +145,6 @@ const TaskDetails = () => {
                                                 </Col>
                                             </Row>
 
-                                            {/* Controlli di ordinamento */}
                                             <Row className="mb-3">
                                                 <Col>
                                                     <div className="d-flex align-items-center">
@@ -179,7 +173,6 @@ const TaskDetails = () => {
                                                 </Col>
                                             </Row>
 
-                                            {/* Tabella dettagliata */}
                                             <Table responsive hover>
                                                 <thead>
                                                     <tr>

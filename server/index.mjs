@@ -51,31 +51,24 @@ initializePassport(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-const isLoggedIn = (req, res, next) =>
-  req.isAuthenticated()
-    ? next()
-    : res.status(401).json({ error: "Not authorized" });
-
-    //refactor
-const isTeacher = (req, res, next) => {
+const requireAuth = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authorized" });
-  }
-  if (req.user.role !== 'teacher') {
-    return res.status(403).json({ error: "Teacher access required" });
   }
   next();
 };
 
-const isStudent = (req, res, next) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: "Not authorized" });
-  }
-  if (req.user.role !== 'student') {
-    return res.status(403).json({ error: "Student access required" });
+const requireRole = (role) => (req, res, next) => {
+  if (req.user.role !== role) {
+    return res.status(403).json({ 
+      error: `${role.charAt(0).toUpperCase() + role.slice(1)} access required` 
+    });
   }
   next();
 };
+
+const isTeacher = [requireAuth, requireRole('teacher')];
+const isStudent = [requireAuth, requireRole('student')];
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
@@ -198,9 +191,13 @@ app.put("/api/tasks/teacher/:id/score", isTeacher,
       const { score } = req.body;
       const teacherId = req.user.id;
 
-      const task = await getTaskById(taskId, teacherId);
+      const task = await getTaskById(taskId);
       if (!task) {
-        return res.status(404).json({ error: "task not found" });
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      if (task.teacherId !== teacherId) {
+        return res.status(403).json({ error: "Access denied to this task" });
       }
 
       if (!task.answer) {
@@ -208,13 +205,13 @@ app.put("/api/tasks/teacher/:id/score", isTeacher,
       }
 
       if (task.status === 'closed') {
-        return res.status(400).json({ error: "task is already closed" });
+        return res.status(409).json({ error: "Task is already closed" });
       }
 
       await updateTaskScore(taskId, score);
       await closeTask(taskId);
 
-      res.json({ message: "task scored and closed successfully" });
+      res.json({ message: "Task scored and closed successfully" });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -254,11 +251,11 @@ app.put("/api/tasks/student/:id/answer", isStudent,
 
       const task = await getTaskById(taskId);
       if (!task) {
-        return res.status(404).json({ error: "task not found" });
+        return res.status(404).json({ error: "Task not found" });
       }
 
       if (task.status === 'closed') {
-        return res.status(400).json({ error: "task is closed and cannot be modified" });
+        return res.status(409).json({ error: "Task is closed and cannot be modified" });
       }
 
       const isStudentInGroup = task.students.some(s => s.id === studentId);
@@ -284,6 +281,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Internal server error" });
 });
+
 
 // activate the server
 app.listen(port, () => {

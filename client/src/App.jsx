@@ -11,6 +11,7 @@ import { LoginForm } from "./components/AuthComponents";
 import NotFound from "./components/NotFound";
 import { API } from "./API/API.mjs";
 
+
 function App() {
   const [user, setUser] = useState(null);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -36,7 +37,7 @@ function App() {
     if (message && message.msg) {
       const timer = setTimeout(() => {
         setMessage('');
-      }, 4000); 
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
@@ -87,8 +88,22 @@ function App() {
           <Route path="/dashboard" element={loggedIn ? <Dashboard /> : <Navigate replace to='/login' />} />
           <Route path="/login" element={loggedIn ? <Navigate replace to='/' /> : <LoginForm />} />
           <Route path="/tasks" element={loggedIn ? <TaskManagement /> : <Navigate replace to='/login' />} />
-          <Route path="/tasks/new" element={loggedIn && user?.role === 'teacher' ? <CreateTasks /> : <Navigate replace to='/login' />} />
-          <Route path="/progress" element={loggedIn && user?.role === 'teacher' ? <TaskDatails /> : <Navigate replace to='/login' />} />
+          <Route
+            path="/tasks/new"
+            element={
+              loggedIn
+                ? (user?.role === 'teacher' ? <CreateTasks /> : <Navigate replace to='/tasks' />)
+                : <Navigate replace to='/login' />
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              loggedIn
+                ? (user?.role === 'teacher' ? <TaskDatails /> : <Navigate replace to='/dashboard'/>)
+                : <Navigate replace to='/login' />
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

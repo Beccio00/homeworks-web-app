@@ -7,51 +7,57 @@ import Avatar from './Avatar';
 import GaugeChart from './GaugeChart';
 
 const Dashboard = () => {
-    const { user } = useContext(AuthContext);
-    const [loading, setLoading] = useState(true);
-    const [studentAverage, setStudentAverage] = useState(0);
-    const [totalStudents, setTotalStudents] = useState(0);
+  const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
+  const [studentAverage, setStudentAverage] = useState(0);
+  const [totalStudents, setTotalStudents] = useState(0);
 
-    useEffect(() => {
-        if (user.role === 'teacher') {
-            fetchTeacherStats();
-        } else if (user.role === 'student') {
-            fetchStudentStats();
-        }
-    }, [user.role]);
+  useEffect(() => {
+    let isMounted = true;
+    if (isMounted) {
+      if (user.role === 'teacher') {
+        fetchTeacherStats();
+      } else if (user.role === 'student') {
+        fetchStudentStats();
+      }
+    }
+    return () => {
+      isMounted = false; // Cleanup to avoid memory leaks
+    }
+  }, [user.role]);
 
-    const fetchTeacherStats = async () => {
-        try {
-            setLoading(true);
-            const data = await API.getClassOverview();
+  const fetchTeacherStats = async () => {
+    try {
+      setLoading(true);
+      const data = await API.getClassOverview();
 
-            const studentsWithScores = data.students?.filter(student => student.averageScore > 0) || [];
-            const classAverage = studentsWithScores.length > 0 
-                ? studentsWithScores.reduce((sum, student) => sum + student.averageScore, 0) / studentsWithScores.length
-                : 0;
-            setStudentAverage(classAverage);
-            setTotalStudents(data.students?.length || 0);
-        } catch (err) {
-            console.error('Errore nel caricamento statistiche insegnante:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+      const studentsWithScores = data.students?.filter(student => student.averageScore > 0) || [];
+      const classAverage = studentsWithScores.length > 0
+        ? studentsWithScores.reduce((sum, student) => sum + student.averageScore, 0) / studentsWithScores.length
+        : 0;
+      setStudentAverage(classAverage);
+      setTotalStudents(data.students?.length || 0);
+    } catch (err) {
+      console.error('Errore nel caricamento statistiche insegnante:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchStudentStats = async () => {
-        try {
-            setLoading(true);
-            const data = await API.getAllTasks();
-            setStudentAverage(data.weightedAverage || 0);
-            const closedTasks = data.tasks?.filter(task => task.status === 'closed') || [];
-            setTotalStudents(closedTasks.length);
-        } catch (err) {
-            console.error('Errore nel caricamento statistiche studente:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-    return (
+  const fetchStudentStats = async () => {
+    try {
+      setLoading(true);
+      const data = await API.getAllTasks();
+      setStudentAverage(data.weightedAverage);
+      const closedTasks = data.tasks.filter(task => task.status === 'closed');
+      setTotalStudents(closedTasks.length);
+    } catch (err) {
+      console.error('Errore nel caricamento statistiche studente:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
     <Container className="mt-4">
       <Row>
         <Col>
@@ -120,7 +126,7 @@ const Dashboard = () => {
                       </Card>
                     </Col>
                   </Row>
-                  
+
                   <Row className="mt-3">
                     <Col>
                       <Card className="border-success" style={{ outline: 'none' }} tabIndex={-1}>
@@ -172,7 +178,7 @@ const Dashboard = () => {
                       </Card>
                     </Col>
                   </Row>
-                  
+
                   <Row className="mt-3">
                     <Col>
                       <Card className="border-info" style={{ outline: 'none' }} tabIndex={-1}>

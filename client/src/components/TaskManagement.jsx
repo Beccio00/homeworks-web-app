@@ -30,11 +30,11 @@ const TaskManagement = () => {
             
             if (isTeacher) {
                 tasksData = await API.getTeacherTasks();
-                setAllTasks(tasksData || []);
+                setAllTasks(tasksData);
             } else if (isStudent) {
                 const data = await API.getAllTasks();
-                setAllTasks(data.tasks || []);
-                setWeightedAverage(data.weightedAverage || 0);
+                setAllTasks(data.tasks);
+                setWeightedAverage(data.weightedAverage);
             }
         } catch (err) {
             setError('Errore nel caricamento dei compiti: ' + err.message);
