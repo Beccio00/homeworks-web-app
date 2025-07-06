@@ -313,7 +313,29 @@ M:N relation between tasks and students assigned to them
 
 ## Screenshot
 
-![Screenshot](./img/screenshot.jpg)
+### Dashboard
+- **Teacher version:**
+![Dashboard Teacher](./screen/dashboard_teacher.png)
+
+- **Student version:**
+![Dashboard Student](./screen/dashboard_student.png)
+
+### Task Management
+- **Teacher - Task Manager:**
+![Task Manager Teacher](./screen/task_manager_teacer.png)
+
+- **Teacher - Create New Task:**
+![Create New Task](./screen/create_new_task_teacher.png)
+
+- **Teacher - Class Overview:**
+![Class Overview](./screen/class_overview.png)
+
+### Student Task Views
+- **Student - Open Task:**
+![Student Open Task](./screen/task_open_student.png)
+
+- **Student - Closed Task:**
+![Student Closed Task](./screen/task_close_student.png)
 
 ## Users Credentials
 
