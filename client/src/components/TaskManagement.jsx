@@ -22,7 +22,7 @@ const TaskManagement = () => {
 
     useEffect(() => {
         fetchTasks();
-    }, [user]);
+    }, [user.role]);
 
     const fetchTasks = async () => {
         try {

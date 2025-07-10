@@ -18,7 +18,7 @@ const Dashboard = () => {
     } else if (user.role === 'student') {
       fetchStudentStats();
     }
-  }, [user]);
+  }, [user.role]);
 
   const fetchTeacherStats = async () => {
     try {

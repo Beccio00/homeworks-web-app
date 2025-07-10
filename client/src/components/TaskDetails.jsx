@@ -17,7 +17,7 @@ const TaskDetails = () => {
         if (user.role === 'teacher') {
             fetchClassOverview();
         }
-    }, [user]);
+    }, [user.role]);
 
     const fetchClassOverview = async () => {
         try {
