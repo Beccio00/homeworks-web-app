@@ -27,9 +27,9 @@ const CreateTasks = () => {
 
     const handleStudentChange = (studentId, isChecked) => {
         if (isChecked) {
-            setSelectedStudents([...selectedStudents, studentId]);
+            setSelectedStudents(prev => [...prev, studentId]);
         } else {
-            setSelectedStudents(selectedStudents.filter(id => id !== studentId));
+            setSelectedStudents(prev => prev.filter(id => id !== studentId));
         }
     };
 
