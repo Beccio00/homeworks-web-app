@@ -2,6 +2,117 @@
 # Exam #2: "Compiti"
 ## Student: s349024 RICCARDO BECCIOLINI 
 
+# Group Assignment Management System
+
+## Project Overview
+
+A set of NT teachers from a class of NS students must organize and evaluate a series of assignments that students must complete in groups.
+
+An assignment consists of a 'question', a 'group' of involved students, an 'answer' provided by the students, and a final 'evaluation' (a score from 0 to 30).
+
+## Teacher Functionality
+
+An authenticated teacher can perform the following operations:
+
+### Define New Assignment
+- Write the question and select the group of participating students (from all students)
+- The system must prevent the creation of a group where any pair of students has already participated together in at least 2 previous assignments assigned by the authenticated teacher
+- Immediately after creation, the assignment becomes "open"
+- A group must include between 2 and 6 students
+
+### Grade Assignment
+- View the answer given to the assignment and enter an evaluation score, only if an answer has been provided by the students
+- After entering the evaluation, an assignment becomes "closed" and can no longer be modified (neither the answer nor the score can be altered)
+
+### View Class Status
+- Display the general status of the class, listing for each student:
+  - How many of their assignments are open
+  - How many are closed
+  - The average score they obtained for assignments assigned only by that teacher
+- This list can be sorted alphabetically, by total number of student assignments, or by average score
+
+## Student Functionality
+
+An authenticated student can perform the following operations:
+
+### View Open Assignments
+- Display open assignments in which they are involved
+
+### Submit Answers
+- Enter and submit answers
+- Any student in the group can submit an answer
+- The answer can be modified/updated by the same student or any other student in the group, until the teacher evaluates it
+
+### View Grades
+- Display evaluation scores received in all closed assignments they participated in, along with their own average score
+
+## System Notes
+
+- At any time, there can be an arbitrary number of open assignments
+- All NT teachers supervise the same group of NS students
+- Each teacher sees and evaluates only their own assignments (not those of other teachers)
+- Each assignment is assigned to a single group of students; if the teacher wants to assign the same assignment to different groups, they must create multiple (identical) assignments
+- Each student's average score is calculated as a weighted average, where the weights are the inverse of the number of students in the group (a score in a group of 6 students is worth half of a score in a group of 3 students)
+- For simplicity, both the question and answer are considered text blocks of arbitrary length
+
+The organization of these specifications into different screens (and possibly different routes) is left to the student.
+
+## Project Requirements
+
+### Technical Architecture
+- The application architecture and source code must be developed adopting software development best practices, particularly for single-page applications (SPA) using React and HTTP APIs
+- APIs must be carefully protected and the front-end should not receive unnecessary information
+- The application must be designed for a desktop browser. Responsiveness for mobile devices is not required or evaluated
+
+### Technology Stack
+- The project must be implemented as a React application that interacts with HTTP APIs implemented in Node.js + Express
+- Node.js version must be the one used during the course (22.x, LTS)
+- The database must be stored in an SQLite file
+- The programming language must be JavaScript
+
+### Communication Pattern
+- Communication between client and server must follow the "two servers" pattern, correctly configuring CORS and with React in "development" mode with Strict Mode enabled
+
+### Application Behavior
+- Project evaluation will be performed by navigating within the application
+- The "refresh" button and manual URL setting (except /) will not be tested or used, and their behavior is not specified
+- The application should never "auto-reload" as a consequence of normal application use
+
+### Project Structure
+- The project root directory must contain a README.md file and two subdirectories (client and server)
+- The project must be launchable with the commands: `cd server; nodemon index.mjs` and `cd client; npm run dev`
+- A template with the project directory skeleton is available in the exam repository
+- It can be assumed that nodemon is already installed at the system level
+- No other modules will be available globally
+
+### Delivery
+- The entire project must be delivered via GitHub, in the repository created by GitHub Classroom
+- The project must not include node_modules directories. They must be recreatable via the "npm install" command immediately after "git clone"
+
+### Libraries
+- The project can use popular and commonly adopted libraries (for example, day.js, react-bootstrap, etc.), if applicable and useful
+- Such libraries must be correctly declared in package.json files so that the npm install command can download and install them
+
+### Authentication
+- User authentication (login and logout) and API access must be implemented using Passport.js and session cookies
+- Credentials must be stored in hashed format with salt
+- Registration of a new user is not required or evaluated
+
+## Quality Requirements
+
+In addition to implementing the required application functionality, the following quality requirements will be evaluated:
+
+- **Database Design and Organization**
+- **HTTP API Design**
+- **React Component Organization and Routes**
+- **Correct Use of React Patterns** (functional behavior, hooks, state, context and effects). This includes avoiding direct DOM manipulation
+- **Code Clarity**
+- **Absence of Errors** (and warnings) in the browser console (except those caused by errors in imported libraries)
+- **No Application Crashes** or unhandled exceptions
+- **Essential Data Validation** (in Express and React)
+- **Basic Usability and Ease of Use**
+- **Solution Originality**
+
 ## React Client Application Routes
 
 - Route `/`: Default redirect route - redirects authenticated users to `/dashboard`, unauthenticated users to `/login`
